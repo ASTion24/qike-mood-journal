@@ -9,9 +9,11 @@
       content="栖刻是一款轻量的情绪日记与自我关怀工具，帮助你记录、理解并照顾当下的感受。"
     />
     <title>栖刻 · 情绪日记与自我关怀</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css?v=2" />
   </head>
   <body>
+    <a class="skip-link" href="#openingTitle">跳到情绪记录</a>
     <div class="app-shell">
       <aside class="sidebar" aria-label="主导航">
         <div class="brand" aria-label="栖刻">
@@ -20,7 +22,7 @@
         </div>
 
         <nav class="nav-list">
-          <button class="nav-item is-active" type="button" data-view="today">
+          <button class="nav-item is-active" type="button" data-view="today" aria-current="page">
             <i data-lucide="circle-dot" aria-hidden="true"></i>
             <span>此刻</span>
           </button>
@@ -64,11 +66,15 @@
             <div class="primary-column">
               <section class="opening" aria-labelledby="openingTitle">
                 <p class="eyebrow">今日情绪签到</p>
-                <h1 id="openingTitle">现在的你，<br />更接近哪种感受？</h1>
+                <h1 id="openingTitle" tabindex="-1">现在的你，<br />更接近哪种感受？</h1>
                 <p class="opening-copy">不用解释得很完整，先诚实地看见它。</p>
               </section>
 
               <form class="checkin-form" id="checkinForm">
+                <div class="draft-status" id="draftStatus" aria-live="polite" hidden>
+                  <span id="draftMessage"></span>
+                  <button class="text-button" id="discardDraftButton" type="button">丢弃草稿</button>
+                </div>
                 <fieldset class="mood-fieldset">
                   <legend class="sr-only">选择情绪</legend>
                   <div class="mood-options" id="moodOptions">
@@ -138,6 +144,7 @@
                     <button type="button" data-trigger="自我期待" aria-pressed="false">自我期待</button>
                     <button type="button" data-trigger="说不清" aria-pressed="false">说不清</button>
                   </div>
+                  <p class="field-note" id="triggerHint">你可以只记录情绪，也可以点选相关线索。</p>
                 </div>
 
                 <div class="form-action">
@@ -147,6 +154,7 @@
                   </button>
                   <span class="autosave-label"><i data-lucide="shield-check" aria-hidden="true"></i> 私密记录</span>
                 </div>
+                <p class="form-error" id="saveError" role="alert" hidden></p>
               </form>
 
               <section class="analysis-result" id="analysisResult" aria-live="polite" hidden>
@@ -158,6 +166,7 @@
                   <span class="analysis-mood" id="analysisMood"></span>
                 </div>
                 <p class="analysis-summary" id="analysisSummary"></p>
+                <p class="field-note">线索仅用于自我回顾；文字建议需要你确认，不代表因果或诊断。</p>
                 <div class="analysis-grid">
                   <div>
                     <span class="analysis-label">可能的触发线索</span>
@@ -179,7 +188,7 @@
                     <p class="eyebrow">最近记录</p>
                     <h2 id="recentTitle">情绪留下的纹理</h2>
                   </div>
-                  <button class="text-button" type="button" data-view="trends">查看全部</button>
+                  <button class="text-button" type="button" id="viewHistoryButton">查看全部</button>
                 </div>
                 <div class="entry-list" id="entryList"></div>
               </section>
@@ -187,14 +196,22 @@
 
             <aside class="context-column" aria-label="本周情绪摘要">
               <div class="context-sticky">
-                <div class="week-status">
-                  <span class="eyebrow">本周节奏</span>
-                  <span id="weekCount">5 次记录</span>
+                <div class="demo-notice" id="demoNotice">
+                  <span class="eyebrow">先体验，再记录</span>
+                  <h2>用一周的示例，<br />看看情绪的轨迹。</h2>
+                  <p>下面展示的是虚构日记。你的记录会单独保存和分析。</p>
+                  <button class="secondary-button" id="startPersonalButton" type="button">开始我的日记 <i data-lucide="arrow-right" aria-hidden="true"></i></button>
                 </div>
-                <div class="mini-chart" id="miniChart" aria-label="最近七天情绪趋势"></div>
+                <button class="text-button" id="showDemoButton" type="button" hidden>查看示例日记</button>
+                <div class="week-status">
+                  <span class="eyebrow">近 7 天节奏</span>
+                  <span id="weekCount"></span>
+                </div>
+                <div class="mini-chart" id="miniChart" aria-label="近七天情绪强度，颜色表示当日常见感受"></div>
+                <p class="field-note mini-chart-note">高度：感受强度 · 颜色：常见情绪</p>
                 <div class="context-insight">
                   <span class="insight-marker" aria-hidden="true"></span>
-                  <p id="contextInsight">工作日傍晚更容易感到疲惫，睡眠充足后的情绪通常更平稳。</p>
+                  <p id="contextInsight"></p>
                 </div>
                 <div class="today-practice">
                   <div class="practice-art" aria-hidden="true">
@@ -219,7 +236,7 @@
           <div class="wide-view">
             <header class="view-header">
               <div>
-                <p class="eyebrow">过去 14 天</p>
+                <p class="eyebrow" id="periodLabel">近 7 天 · 含今天</p>
                 <h1>回望，不是评判。</h1>
               </div>
               <div class="period-control" role="group" aria-label="趋势周期">
@@ -231,9 +248,9 @@
 
             <div class="trend-summary">
               <div class="trend-kpi">
-                <span>平均情绪</span>
+                <span>最常记录的感受</span>
                 <strong id="averageMood">3.2</strong>
-                <small id="averageMoodLabel">平静</small>
+                <small id="averageMoodLabel"></small>
               </div>
               <div class="trend-kpi">
                 <span>记录次数</span>
@@ -251,37 +268,50 @@
               <div class="section-heading chart-heading">
                 <div>
                   <p class="eyebrow">情绪趋势</p>
-                  <h2 id="trendTitle">有起伏，也有恢复</h2>
+                  <h2 id="trendTitle">让感受变得可见</h2>
                 </div>
                 <div class="chart-legend">
-                  <span><i></i> 情绪状态</span>
-                  <span><i></i> 记录强度</span>
+                  <span><i></i> 每次记录</span>
+                  <span><i></i> 圆点大小代表强度</span>
                 </div>
               </div>
               <div class="chart-wrap">
-                <svg id="trendChart" viewBox="0 0 900 310" role="img" aria-label="情绪趋势折线图"></svg>
+                <svg id="trendChart" viewBox="0 0 900 310" role="img" aria-label="按日期排列的情绪记录图，圆点大小代表感受强度"></svg>
               </div>
+              <p class="field-note">空白日期表示没有记录。每一种情绪都可以存在，这里没有好坏分数。</p>
             </section>
 
             <div class="insight-layout">
               <section class="pattern-section" aria-labelledby="patternTitle">
                 <p class="eyebrow">触发因素</p>
-                <h2 id="patternTitle">什么在影响你</h2>
+                <h2 id="patternTitle">反复出现的线索</h2>
                 <div class="trigger-bars" id="triggerBars"></div>
               </section>
 
               <section class="reflection-section" aria-labelledby="reflectionTitle">
                 <p class="eyebrow">温和洞察</p>
-                <h2 id="reflectionTitle">你比想象中更有韧性</h2>
-                <blockquote id="reflectionText">
-                  “即使在压力高的时候，你仍会主动寻找独处和散步的空间。这可能是你正在形成的恢复方式。”
-                </blockquote>
+                <h2 id="reflectionTitle">从记录里多看见一点</h2>
+                <blockquote id="reflectionText"></blockquote>
                 <button class="secondary-button" type="button" data-view="care">
                   <span>看看适合我的关怀</span>
                   <i data-lucide="arrow-right" aria-hidden="true"></i>
                 </button>
               </section>
             </div>
+            <section class="history-section" id="historySection" aria-labelledby="historyTitle">
+              <div class="section-heading">
+                <div><p class="eyebrow">日记档案</p><h2 id="historyTitle">每一页都在这里</h2></div>
+                <span class="field-note" id="historyCount" aria-live="polite"></span>
+              </div>
+              <div class="history-tools">
+                <label class="search-field"><i data-lucide="search" aria-hidden="true"></i><span class="sr-only">搜索日记</span><input id="historySearch" type="search" placeholder="搜索文字或触发线索" maxlength="100" /></label>
+                <label class="filter-field"><span class="sr-only">筛选情绪</span><select id="historyMood">
+                  <option value="">全部情绪</option><option>低落</option><option>疲惫</option><option>平静</option><option>轻快</option><option>雀跃</option>
+                </select></label>
+              </div>
+              <p class="field-note">显示全部日期的日记；点击记录可以查看全文。</p>
+              <div class="entry-list" id="historyList"></div>
+            </section>
           </div>
         </section>
 
@@ -301,10 +331,10 @@
 
             <section class="featured-practice" aria-labelledby="featuredPracticeTitle">
               <div class="featured-copy">
-                <span class="recommend-label"><i data-lucide="sparkles" aria-hidden="true"></i> 最适合现在</span>
+                <span class="recommend-label"><i data-lucide="sparkles" aria-hidden="true"></i> 可以从这里开始</span>
                 <h2 id="featuredPracticeTitle">跟随呼吸，<br />把注意力带回身体</h2>
-                <p>无需做到“放空”。只要跟着节奏，完成四次缓慢呼吸。</p>
-                <button class="inverse-button" type="button" data-practice="breath">
+                <p id="featuredReason"></p>
+                <button class="inverse-button" id="featuredPracticeButton" type="button" data-practice="breath">
                   <i data-lucide="play" aria-hidden="true"></i>
                   <span>开始 1 分钟</span>
                 </button>
@@ -316,7 +346,7 @@
                   <span class="field-line field-line-three"></span>
                   <span class="field-center"></span>
                 </div>
-                <div class="featured-caption">
+                <div class="featured-caption" id="featuredCaption">
                   <span>吸气</span>
                   <span>停留</span>
                   <span>呼气</span>
@@ -334,8 +364,15 @@
               </div>
 
               <div class="practice-list">
-                <button class="practice-row" type="button" data-practice="grounding">
+                <button class="practice-row" type="button" data-practice="breath">
                   <span class="practice-index">01</span>
+                  <span class="practice-icon practice-icon-sage"><i data-lucide="wind" aria-hidden="true"></i></span>
+                  <span class="practice-copy"><strong>一分钟，回到呼吸</strong><small>想暂停一下、安静片刻时</small></span>
+                  <span class="practice-meta">1 分钟</span>
+                  <span class="practice-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></span>
+                </button>
+                <button class="practice-row" type="button" data-practice="grounding">
+                  <span class="practice-index">02</span>
                   <span class="practice-icon practice-icon-coral"><i data-lucide="scan-eye" aria-hidden="true"></i></span>
                   <span class="practice-copy">
                     <strong>5-4-3-2-1 感官着陆</strong>
@@ -345,17 +382,17 @@
                   <span class="practice-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></span>
                 </button>
                 <button class="practice-row" type="button" data-practice="walk">
-                  <span class="practice-index">02</span>
+                  <span class="practice-index">03</span>
                   <span class="practice-icon practice-icon-sage"><i data-lucide="footprints" aria-hidden="true"></i></span>
                   <span class="practice-copy">
                     <strong>不带目标地走一会</strong>
-                    <small>疲惫、久坐或注意力涣散时</small>
+                    <small>久坐后，身体允许的情况下</small>
                   </span>
                   <span class="practice-meta">10 分钟</span>
                   <span class="practice-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></span>
                 </button>
                 <button class="practice-row" type="button" data-practice="sound">
-                  <span class="practice-index">03</span>
+                  <span class="practice-index">04</span>
                   <span class="practice-icon practice-icon-ink"><i data-lucide="waves" aria-hidden="true"></i></span>
                   <span class="practice-copy">
                     <strong>听一段缓慢的声音</strong>
@@ -365,6 +402,12 @@
                   <span class="practice-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></span>
                 </button>
               </div>
+            </section>
+
+            <section class="care-history" aria-labelledby="careHistoryTitle">
+              <div class="section-heading"><div><p class="eyebrow">练习之后</p><h2 id="careHistoryTitle">找到适合自己的方式</h2></div></div>
+              <p id="careHistorySummary" class="field-note">完成练习后，记下是否有帮助，慢慢找到自己的恢复方式。</p>
+              <div id="careHistoryList"></div>
             </section>
 
             <section class="support-strip" aria-labelledby="supportTitle">
@@ -382,7 +425,7 @@
       </main>
 
       <nav class="mobile-nav" aria-label="移动端导航">
-        <button class="is-active" type="button" data-view="today">
+        <button class="is-active" type="button" data-view="today" aria-current="page">
           <i data-lucide="circle-dot" aria-hidden="true"></i>
           <span>此刻</span>
         </button>
@@ -417,6 +460,8 @@
             <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
           </div>
         </div>
+        <p class="field-note" id="practiceNote">按自己的节奏进行，任何时候都可以暂停。</p>
+        <label class="sound-volume" id="soundVolumeLabel" hidden>音量 <input id="soundVolume" type="range" min="0" max="100" value="35" /></label>
         <div class="practice-controls">
           <span class="practice-time" id="practiceTime">01:00</span>
           <button class="primary-button practice-start" id="practiceStartButton" type="button">
@@ -424,6 +469,17 @@
             <i data-lucide="play" aria-hidden="true"></i>
           </button>
         </div>
+        <section class="practice-feedback" id="practiceFeedback" aria-labelledby="feedbackTitle" hidden>
+          <p class="eyebrow">这几分钟，留给了自己</p>
+          <h3 id="feedbackTitle">现在感觉怎么样？</h3>
+          <p>没有变化也没关系。这个感受只属于你。</p>
+          <div class="feedback-options">
+            <button type="button" data-feedback="helpful">松了一点</button>
+            <button type="button" data-feedback="same">差不多</button>
+            <button type="button" data-feedback="worse">更不舒服</button>
+          </div>
+          <p class="field-note" id="feedbackSaved" role="status" hidden></p>
+        </section>
       </div>
     </div>
 
@@ -444,7 +500,8 @@
       <span id="toastText">已经收好这一刻</span>
     </div>
 
-    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
-    <script src="./app.js"></script>
+    <input id="importFile" type="file" accept=".json,application/json" hidden />
+    <script src="./vendor/lucide.min.js"></script>
+    <script src="./app.js?v=2"></script>
   </body>
 </html>
