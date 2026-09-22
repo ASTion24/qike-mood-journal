@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f5f1" />
+    <meta
+      name="description"
+      content="栖刻是一款轻量的情绪日记与自我关怀工具，帮助你记录、理解并照顾当下的感受。"
+    />
+    <title>栖刻 · 情绪日记与自我关怀</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand" aria-label="栖刻">
+          <span class="brand-mark" aria-hidden="true"><i></i></span>
+          <span class="brand-name">栖刻</span>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item is-active" type="button" data-view="today">
+            <i data-lucide="circle-dot" aria-hidden="true"></i>
+            <span>此刻</span>
+          </button>
+          <button class="nav-item" type="button" data-view="trends">
+            <i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>
+            <span>回望</span>
+          </button>
+          <button class="nav-item" type="button" data-view="care">
+            <i data-lucide="heart-handshake" aria-hidden="true"></i>
+            <span>关怀</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-foot">
+          <button class="quiet-button" id="privacyButton" type="button">
+            <i data-lucide="lock-keyhole" aria-hidden="true"></i>
+            <span>仅存于本机</span>
+          </button>
+          <p>不是医疗诊断工具</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <button class="mobile-brand" type="button" data-view="today" aria-label="回到此刻">
+            <span class="brand-mark brand-mark-small" aria-hidden="true"><i></i></span>
+            <span>栖刻</span>
+          </button>
+          <div class="topbar-date">
+            <span id="dateLabel"></span>
+            <span class="weather-dot" aria-hidden="true"></span>
+            <span>给自己留一点空白</span>
+          </div>
+          <button class="icon-button" id="settingsButton" type="button" aria-label="数据设置" title="数据设置">
+            <i data-lucide="settings-2" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <section class="view is-visible" id="todayView" data-view-panel="today">
+          <div class="today-layout">
+            <div class="primary-column">
+              <section class="opening" aria-labelledby="openingTitle">
+                <p class="eyebrow">今日情绪签到</p>
+                <h1 id="openingTitle">现在的你，<br />更接近哪种感受？</h1>
+                <p class="opening-copy">不用解释得很完整，先诚实地看见它。</p>
+              </section>
+
+              <form class="checkin-form" id="checkinForm">
+                <fieldset class="mood-fieldset">
+                  <legend class="sr-only">选择情绪</legend>
+                  <div class="mood-options" id="moodOptions">
+                    <button type="button" class="mood-button" data-mood="低落" data-score="1" aria-pressed="false">
+                      <span class="mood-face mood-face-low" aria-hidden="true"><i></i></span>
+                      <span>低落</span>
+                    </button>
+                    <button type="button" class="mood-button" data-mood="疲惫" data-score="2" aria-pressed="false">
+                      <span class="mood-face mood-face-tired" aria-hidden="true"><i></i></span>
+                      <span>疲惫</span>
+                    </button>
+                    <button type="button" class="mood-button" data-mood="平静" data-score="3" aria-pressed="false">
+                      <span class="mood-face mood-face-calm" aria-hidden="true"><i></i></span>
+                      <span>平静</span>
+                    </button>
+                    <button type="button" class="mood-button" data-mood="轻快" data-score="4" aria-pressed="false">
+                      <span class="mood-face mood-face-light" aria-hidden="true"><i></i></span>
+                      <span>轻快</span>
+                    </button>
+                    <button type="button" class="mood-button" data-mood="雀跃" data-score="5" aria-pressed="false">
+                      <span class="mood-face mood-face-bright" aria-hidden="true"><i></i></span>
+                      <span>雀跃</span>
+                    </button>
+                  </div>
+                </fieldset>
+
+                <div class="intensity-row">
+                  <label for="intensity">感受强度</label>
+                  <div class="range-wrap">
+                    <input id="intensity" type="range" min="1" max="5" value="3" />
+                    <div class="range-labels" aria-hidden="true">
+                      <span>轻微</span>
+                      <span>强烈</span>
+                    </div>
+                  </div>
+                  <output id="intensityValue" for="intensity">3</output>
+                </div>
+
+                <div class="journal-block">
+                  <div class="journal-heading">
+                    <label for="journalText">发生了什么？</label>
+                    <button class="prompt-button" id="promptButton" type="button">
+                      <i data-lucide="shuffle" aria-hidden="true"></i>
+                      <span>换个问题</span>
+                    </button>
+                  </div>
+                  <p class="writing-prompt" id="writingPrompt">这一刻，身体最先告诉了你什么？</p>
+                  <textarea
+                    id="journalText"
+                    rows="5"
+                    maxlength="360"
+                    placeholder="写下几个词也可以……"
+                  ></textarea>
+                  <div class="textarea-meta">
+                    <span id="supportHint">你的文字只会留在这台设备上</span>
+                    <span><b id="charCount">0</b>/360</span>
+                  </div>
+                </div>
+
+                <div class="trigger-block">
+                  <div class="field-label">可能与什么有关？<span>可多选</span></div>
+                  <div class="trigger-options" id="triggerOptions">
+                    <button type="button" data-trigger="工作/学业" aria-pressed="false">工作 / 学业</button>
+                    <button type="button" data-trigger="人际关系" aria-pressed="false">人际关系</button>
+                    <button type="button" data-trigger="睡眠" aria-pressed="false">睡眠</button>
+                    <button type="button" data-trigger="身体状态" aria-pressed="false">身体状态</button>
+                    <button type="button" data-trigger="自我期待" aria-pressed="false">自我期待</button>
+                    <button type="button" data-trigger="说不清" aria-pressed="false">说不清</button>
+                  </div>
+                </div>
+
+                <div class="form-action">
+                  <button class="primary-button" type="submit" id="saveButton" disabled>
+                    <span>收好这一刻</span>
+                    <i data-lucide="arrow-right" aria-hidden="true"></i>
+                  </button>
+                  <span class="autosave-label"><i data-lucide="shield-check" aria-hidden="true"></i> 私密记录</span>
+                </div>
+              </form>
+
+              <section class="analysis-result" id="analysisResult" aria-live="polite" hidden>
+                <div class="analysis-intro">
+                  <div>
+                    <p class="eyebrow">刚刚的记录</p>
+                    <h2 id="analysisTitle">你已经看见了这份感受</h2>
+                  </div>
+                  <span class="analysis-mood" id="analysisMood"></span>
+                </div>
+                <p class="analysis-summary" id="analysisSummary"></p>
+                <div class="analysis-grid">
+                  <div>
+                    <span class="analysis-label">可能的触发线索</span>
+                    <div class="analysis-tags" id="analysisTags"></div>
+                  </div>
+                  <div>
+                    <span class="analysis-label">此刻更适合</span>
+                    <button class="care-link" id="suggestedCareButton" type="button">
+                      <span id="suggestedCareText">做 1 分钟呼吸练习</span>
+                      <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="recent-section" aria-labelledby="recentTitle">
+                <div class="section-heading">
+                  <div>
+                    <p class="eyebrow">最近记录</p>
+                    <h2 id="recentTitle">情绪留下的纹理</h2>
+                  </div>
+                  <button class="text-button" type="button" data-view="trends">查看全部</button>
+                </div>
+                <div class="entry-list" id="entryList"></div>
+              </section>
+            </div>
+
+            <aside class="context-column" aria-label="本周情绪摘要">
+              <div class="context-sticky">
+                <div class="week-status">
+                  <span class="eyebrow">本周节奏</span>
+                  <span id="weekCount">5 次记录</span>
+                </div>
+                <div class="mini-chart" id="miniChart" aria-label="最近七天情绪趋势"></div>
+                <div class="context-insight">
+                  <span class="insight-marker" aria-hidden="true"></span>
+                  <p id="contextInsight">工作日傍晚更容易感到疲惫，睡眠充足后的情绪通常更平稳。</p>
+                </div>
+                <div class="today-practice">
+                  <div class="practice-art" aria-hidden="true">
+                    <span class="breath-ring breath-ring-one"></span>
+                    <span class="breath-ring breath-ring-two"></span>
+                    <span class="breath-core"></span>
+                  </div>
+                  <div>
+                    <span>今日微练习</span>
+                    <strong>一分钟，回到呼吸</strong>
+                  </div>
+                  <button class="round-button" id="quickBreathButton" type="button" aria-label="开始一分钟呼吸" title="开始">
+                    <i data-lucide="play" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="trendsView" data-view-panel="trends" hidden>
+          <div class="wide-view">
+            <header class="view-header">
+              <div>
+                <p class="eyebrow">过去 14 天</p>
+                <h1>回望，不是评判。</h1>
+              </div>
+              <div class="period-control" role="group" aria-label="趋势周期">
+                <button class="is-active" type="button" data-days="7">7 天</button>
+                <button type="button" data-days="14">14 天</button>
+                <button type="button" data-days="30">30 天</button>
+              </div>
+            </header>
+
+            <div class="trend-summary">
+              <div class="trend-kpi">
+                <span>平均情绪</span>
+                <strong id="averageMood">3.2</strong>
+                <small id="averageMoodLabel">平静</small>
+              </div>
+              <div class="trend-kpi">
+                <span>记录次数</span>
+                <strong id="totalEntries">5</strong>
+                <small>每一次都算数</small>
+              </div>
+              <div class="trend-kpi">
+                <span>常见线索</span>
+                <strong class="trend-kpi-text" id="topTrigger">工作 / 学业</strong>
+                <small id="topTriggerCount">出现 3 次</small>
+              </div>
+            </div>
+
+            <section class="trend-chart-section" aria-labelledby="trendTitle">
+              <div class="section-heading chart-heading">
+                <div>
+                  <p class="eyebrow">情绪趋势</p>
+                  <h2 id="trendTitle">有起伏，也有恢复</h2>
+                </div>
+                <div class="chart-legend">
+                  <span><i></i> 情绪状态</span>
+                  <span><i></i> 记录强度</span>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <svg id="trendChart" viewBox="0 0 900 310" role="img" aria-label="情绪趋势折线图"></svg>
+              </div>
+            </section>
+
+            <div class="insight-layout">
+              <section class="pattern-section" aria-labelledby="patternTitle">
+                <p class="eyebrow">触发因素</p>
+                <h2 id="patternTitle">什么在影响你</h2>
+                <div class="trigger-bars" id="triggerBars"></div>
+              </section>
+
+              <section class="reflection-section" aria-labelledby="reflectionTitle">
+                <p class="eyebrow">温和洞察</p>
+                <h2 id="reflectionTitle">你比想象中更有韧性</h2>
+                <blockquote id="reflectionText">
+                  “即使在压力高的时候，你仍会主动寻找独处和散步的空间。这可能是你正在形成的恢复方式。”
+                </blockquote>
+                <button class="secondary-button" type="button" data-view="care">
+                  <span>看看适合我的关怀</span>
+                  <i data-lucide="arrow-right" aria-hidden="true"></i>
+                </button>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="careView" data-view-panel="care" hidden>
+          <div class="care-view">
+            <header class="view-header care-header">
+              <div>
+                <p class="eyebrow">自我关怀</p>
+                <h1>先照顾此刻的你。</h1>
+                <p>根据近期记录，选择一件现在做得到的小事。</p>
+              </div>
+              <div class="care-temperature">
+                <span>当前建议</span>
+                <strong id="careHeadline">松开紧绷</strong>
+              </div>
+            </header>
+
+            <section class="featured-practice" aria-labelledby="featuredPracticeTitle">
+              <div class="featured-copy">
+                <span class="recommend-label"><i data-lucide="sparkles" aria-hidden="true"></i> 最适合现在</span>
+                <h2 id="featuredPracticeTitle">跟随呼吸，<br />把注意力带回身体</h2>
+                <p>无需做到“放空”。只要跟着节奏，完成四次缓慢呼吸。</p>
+                <button class="inverse-button" type="button" data-practice="breath">
+                  <i data-lucide="play" aria-hidden="true"></i>
+                  <span>开始 1 分钟</span>
+                </button>
+              </div>
+              <div class="featured-visual" aria-hidden="true">
+                <div class="breathing-field">
+                  <span class="field-line field-line-one"></span>
+                  <span class="field-line field-line-two"></span>
+                  <span class="field-line field-line-three"></span>
+                  <span class="field-center"></span>
+                </div>
+                <div class="featured-caption">
+                  <span>吸气</span>
+                  <span>停留</span>
+                  <span>呼气</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="care-library" aria-labelledby="careLibraryTitle">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">按需选择</p>
+                  <h2 id="careLibraryTitle">今天做得到的事</h2>
+                </div>
+                <span class="care-note">建议来自你的近期情绪线索</span>
+              </div>
+
+              <div class="practice-list">
+                <button class="practice-row" type="button" data-practice="grounding">
+                  <span class="practice-index">01</span>
+                  <span class="practice-icon practice-icon-coral"><i data-lucide="scan-eye" aria-hidden="true"></i></span>
+                  <span class="practice-copy">
+                    <strong>5-4-3-2-1 感官着陆</strong>
+                    <small>焦虑、思绪停不下来时</small>
+                  </span>
+                  <span class="practice-meta">3 分钟</span>
+                  <span class="practice-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></span>
+                </button>
+                <button class="practice-row" type="button" data-practice="walk">
+                  <span class="practice-index">02</span>
+                  <span class="practice-icon practice-icon-sage"><i data-lucide="footprints" aria-hidden="true"></i></span>
+                  <span class="practice-copy">
+                    <strong>不带目标地走一会</strong>
+                    <small>疲惫、久坐或注意力涣散时</small>
+                  </span>
+                  <span class="practice-meta">10 分钟</span>
+                  <span class="practice-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></span>
+                </button>
+                <button class="practice-row" type="button" data-practice="sound">
+                  <span class="practice-index">03</span>
+                  <span class="practice-icon practice-icon-ink"><i data-lucide="waves" aria-hidden="true"></i></span>
+                  <span class="practice-copy">
+                    <strong>听一段缓慢的声音</strong>
+                    <small>睡前、通勤或需要独处时</small>
+                  </span>
+                  <span class="practice-meta">5 分钟</span>
+                  <span class="practice-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></span>
+                </button>
+              </div>
+            </section>
+
+            <section class="support-strip" aria-labelledby="supportTitle">
+              <div>
+                <i data-lucide="life-buoy" aria-hidden="true"></i>
+                <div>
+                  <h2 id="supportTitle">当感受重得难以独自承受</h2>
+                  <p>联系信任的人或专业支持，不必一个人扛着。</p>
+                </div>
+              </div>
+              <button class="text-button" id="supportButton" type="button">查看支持方式</button>
+            </section>
+          </div>
+        </section>
+      </main>
+
+      <nav class="mobile-nav" aria-label="移动端导航">
+        <button class="is-active" type="button" data-view="today">
+          <i data-lucide="circle-dot" aria-hidden="true"></i>
+          <span>此刻</span>
+        </button>
+        <button type="button" data-view="trends">
+          <i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>
+          <span>回望</span>
+        </button>
+        <button type="button" data-view="care">
+          <i data-lucide="heart-handshake" aria-hidden="true"></i>
+          <span>关怀</span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="modal-backdrop" id="practiceModal" role="dialog" aria-modal="true" aria-labelledby="practiceModalTitle" hidden>
+      <div class="practice-modal">
+        <button class="modal-close icon-button" type="button" data-close-modal aria-label="关闭" title="关闭">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+        <div class="practice-modal-head">
+          <span class="eyebrow" id="practiceType">一分钟练习</span>
+          <h2 id="practiceModalTitle">跟随呼吸</h2>
+          <p id="practiceDescription">把肩膀放松一点，不需要刻意吸得很深。</p>
+        </div>
+        <div class="practice-stage" id="practiceStage">
+          <div class="breath-visual" id="breathVisual">
+            <span class="breath-progress" id="breathProgress"></span>
+            <span class="breath-text" id="breathText">准备好</span>
+          </div>
+          <div class="grounding-list" id="groundingList" hidden></div>
+          <div class="sound-visual" id="soundVisual" hidden>
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="practice-controls">
+          <span class="practice-time" id="practiceTime">01:00</span>
+          <button class="primary-button practice-start" id="practiceStartButton" type="button">
+            <span>开始</span>
+            <i data-lucide="play" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="infoModal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle" hidden>
+      <div class="info-modal">
+        <button class="modal-close icon-button" type="button" data-close-info aria-label="关闭" title="关闭">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+        <span class="eyebrow" id="infoEyebrow">隐私与数据</span>
+        <h2 id="infoModalTitle">记录只属于你</h2>
+        <div id="infoModalBody" class="info-body"></div>
+        <div class="info-actions" id="infoModalActions"></div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <i data-lucide="check" aria-hidden="true"></i>
+      <span id="toastText">已经收好这一刻</span>
+    </div>
+
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
