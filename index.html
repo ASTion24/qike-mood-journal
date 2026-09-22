@@ -3,80 +3,62 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f6f5f1" />
+    <meta name="theme-color" content="#f5f4f0" />
     <meta
       name="description"
       content="栖刻是一款轻量的情绪日记与自我关怀工具，帮助你记录、理解并照顾当下的感受。"
     />
     <title>栖刻 · 情绪日记与自我关怀</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="./styles.css?v=2" />
+    <link rel="stylesheet" href="./styles.css?v=3" />
   </head>
   <body>
     <a class="skip-link" href="#openingTitle">跳到情绪记录</a>
     <div class="app-shell">
-      <aside class="sidebar" aria-label="主导航">
-        <div class="brand" aria-label="栖刻">
-          <span class="brand-mark" aria-hidden="true"><i></i></span>
-          <span class="brand-name">栖刻</span>
+      <header class="app-header">
+        <div class="header-inner">
+          <button class="brand" type="button" data-view="today" aria-label="栖刻，回到日记">
+            <span class="brand-mark" aria-hidden="true"><i></i></span>
+            <span class="brand-name">栖刻</span>
+          </button>
+          <nav class="nav-list" aria-label="主导航">
+            <button class="nav-item is-active" type="button" data-view="today" aria-current="page">
+              <span>日记</span>
+            </button>
+            <button class="nav-item" type="button" data-view="trends">
+              <span>回顾</span>
+            </button>
+            <button class="nav-item" type="button" data-view="care">
+              <span>练习</span>
+            </button>
+          </nav>
+          <div class="header-actions">
+            <button class="quiet-button" id="privacyButton" type="button">
+              <i data-lucide="lock-keyhole" aria-hidden="true"></i>
+              <span>保存在本机</span>
+            </button>
+            <button class="icon-button" id="settingsButton" type="button" aria-label="数据设置" title="数据设置">
+              <i data-lucide="settings-2" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
-
-        <nav class="nav-list">
-          <button class="nav-item is-active" type="button" data-view="today" aria-current="page">
-            <i data-lucide="circle-dot" aria-hidden="true"></i>
-            <span>此刻</span>
-          </button>
-          <button class="nav-item" type="button" data-view="trends">
-            <i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>
-            <span>回望</span>
-          </button>
-          <button class="nav-item" type="button" data-view="care">
-            <i data-lucide="heart-handshake" aria-hidden="true"></i>
-            <span>关怀</span>
-          </button>
-        </nav>
-
-        <div class="sidebar-foot">
-          <button class="quiet-button" id="privacyButton" type="button">
-            <i data-lucide="lock-keyhole" aria-hidden="true"></i>
-            <span>仅存于本机</span>
-          </button>
-          <p>不是医疗诊断工具</p>
-        </div>
-      </aside>
+      </header>
 
       <main class="main">
-        <header class="topbar">
-          <button class="mobile-brand" type="button" data-view="today" aria-label="回到此刻">
-            <span class="brand-mark brand-mark-small" aria-hidden="true"><i></i></span>
-            <span>栖刻</span>
-          </button>
-          <div class="topbar-date">
-            <span id="dateLabel"></span>
-            <span class="weather-dot" aria-hidden="true"></span>
-            <span>给自己留一点空白</span>
-          </div>
-          <button class="icon-button" id="settingsButton" type="button" aria-label="数据设置" title="数据设置">
-            <i data-lucide="settings-2" aria-hidden="true"></i>
-          </button>
-        </header>
-
         <section class="view is-visible" id="todayView" data-view-panel="today">
           <div class="today-layout">
             <div class="primary-column">
-              <section class="opening" aria-labelledby="openingTitle">
-                <p class="eyebrow">今日情绪签到</p>
-                <h1 id="openingTitle" tabindex="-1">现在的你，<br />更接近哪种感受？</h1>
-                <p class="opening-copy">不用解释得很完整，先诚实地看见它。</p>
-              </section>
-
+              <div class="journal-paper">
+                <header class="opening">
+                  <div>
+                    <h1 id="openingTitle" tabindex="-1">今天的日记</h1>
+                    <p id="dateLabel"></p>
+                  </div>
+                  <span class="date-day" id="dateDay" aria-hidden="true"></span>
+                </header>
               <form class="checkin-form" id="checkinForm">
-                <div class="draft-status" id="draftStatus" aria-live="polite" hidden>
-                  <span id="draftMessage"></span>
-                  <button class="text-button" id="discardDraftButton" type="button">丢弃草稿</button>
-                </div>
                 <fieldset class="mood-fieldset">
-                  <legend class="sr-only">选择情绪</legend>
+                  <legend>现在感觉怎么样？</legend>
                   <div class="mood-options" id="moodOptions">
                     <button type="button" class="mood-button" data-mood="低落" data-score="1" aria-pressed="false">
                       <span class="mood-face mood-face-low" aria-hidden="true"><i></i></span>
@@ -106,8 +88,7 @@
                   <div class="range-wrap">
                     <input id="intensity" type="range" min="1" max="5" value="3" />
                     <div class="range-labels" aria-hidden="true">
-                      <span>轻微</span>
-                      <span>强烈</span>
+                      <span>轻微</span><span>强烈</span>
                     </div>
                   </div>
                   <output id="intensityValue" for="intensity">3</output>
@@ -121,21 +102,21 @@
                       <span>换个问题</span>
                     </button>
                   </div>
-                  <p class="writing-prompt" id="writingPrompt">这一刻，身体最先告诉了你什么？</p>
+                  <p class="writing-prompt" id="writingPrompt">今天有没有一件事，一直留在你脑海里？</p>
                   <textarea
                     id="journalText"
                     rows="5"
                     maxlength="360"
-                    placeholder="写下几个词也可以……"
+                    placeholder="从这里开始写，几个词也可以。"
                   ></textarea>
                   <div class="textarea-meta">
-                    <span id="supportHint">你的文字只会留在这台设备上</span>
+                    <span id="supportHint">内容选填，草稿自动保存</span>
                     <span><b id="charCount">0</b>/360</span>
                   </div>
                 </div>
 
                 <div class="trigger-block">
-                  <div class="field-label">可能与什么有关？<span>可多选</span></div>
+                  <div class="field-label">与什么有关<span>选填 · 可多选</span></div>
                   <div class="trigger-options" id="triggerOptions">
                     <button type="button" data-trigger="工作/学业" aria-pressed="false">工作 / 学业</button>
                     <button type="button" data-trigger="人际关系" aria-pressed="false">人际关系</button>
@@ -144,36 +125,42 @@
                     <button type="button" data-trigger="自我期待" aria-pressed="false">自我期待</button>
                     <button type="button" data-trigger="说不清" aria-pressed="false">说不清</button>
                   </div>
-                  <p class="field-note" id="triggerHint">你可以只记录情绪，也可以点选相关线索。</p>
+                  <p class="field-note" id="triggerHint">选中的线索会用于回顾情绪变化。</p>
                 </div>
 
                 <div class="form-action">
                   <button class="primary-button" type="submit" id="saveButton" disabled>
-                    <span>收好这一刻</span>
-                    <i data-lucide="arrow-right" aria-hidden="true"></i>
+                    <span>保存日记</span>
+                    <i data-lucide="check" aria-hidden="true"></i>
                   </button>
-                  <span class="autosave-label"><i data-lucide="shield-check" aria-hidden="true"></i> 私密记录</span>
+                  <div class="save-status">
+                    <div class="draft-status" id="draftStatus" aria-live="polite" hidden>
+                      <span id="draftMessage"></span>
+                      <button class="text-button" id="discardDraftButton" type="button">丢弃草稿</button>
+                    </div>
+                    <span class="save-help" id="saveHelp">先选择一种情绪</span>
+                  </div>
                 </div>
                 <p class="form-error" id="saveError" role="alert" hidden></p>
               </form>
+              </div>
 
               <section class="analysis-result" id="analysisResult" aria-live="polite" hidden>
                 <div class="analysis-intro">
                   <div>
-                    <p class="eyebrow">刚刚的记录</p>
-                    <h2 id="analysisTitle">你已经看见了这份感受</h2>
+                    <h2 id="analysisTitle">日记已保存</h2>
                   </div>
                   <span class="analysis-mood" id="analysisMood"></span>
                 </div>
                 <p class="analysis-summary" id="analysisSummary"></p>
-                <p class="field-note">线索仅用于自我回顾；文字建议需要你确认，不代表因果或诊断。</p>
+                <p class="field-note">从文字提取的线索，经你确认后才会加入统计。</p>
                 <div class="analysis-grid">
                   <div>
-                    <span class="analysis-label">可能的触发线索</span>
+                    <span class="analysis-label">相关线索</span>
                     <div class="analysis-tags" id="analysisTags"></div>
                   </div>
                   <div>
-                    <span class="analysis-label">此刻更适合</span>
+                    <span class="analysis-label">可以试试</span>
                     <button class="care-link" id="suggestedCareButton" type="button">
                       <span id="suggestedCareText">做 1 分钟呼吸练习</span>
                       <i data-lucide="arrow-up-right" aria-hidden="true"></i>
@@ -182,52 +169,37 @@
                 </div>
               </section>
 
-              <section class="recent-section" aria-labelledby="recentTitle">
-                <div class="section-heading">
-                  <div>
-                    <p class="eyebrow">最近记录</p>
-                    <h2 id="recentTitle">情绪留下的纹理</h2>
-                  </div>
-                  <button class="text-button" type="button" id="viewHistoryButton">查看全部</button>
-                </div>
-                <div class="entry-list" id="entryList"></div>
-              </section>
             </div>
 
-            <aside class="context-column" aria-label="本周情绪摘要">
-              <div class="context-sticky">
+            <aside class="context-column" aria-label="最近日记与本周记录">
+              <section class="recent-section" aria-labelledby="recentTitle">
+                <div class="section-heading">
+                  <h2 id="recentTitle">最近日记</h2>
+                  <button class="text-button" type="button" id="viewHistoryButton">查看全部 <span aria-hidden="true">↗</span></button>
+                </div>
                 <div class="demo-notice" id="demoNotice">
-                  <span class="eyebrow">先体验，再记录</span>
-                  <h2>用一周的示例，<br />看看情绪的轨迹。</h2>
-                  <p>下面展示的是虚构日记。你的记录会单独保存和分析。</p>
-                  <button class="secondary-button" id="startPersonalButton" type="button">开始我的日记 <i data-lucide="arrow-right" aria-hidden="true"></i></button>
+                  <p>正在浏览示例。写下第一篇日记后，这里会换成你的记录。</p>
+                  <button class="text-button" id="startPersonalButton" type="button">收起示例，开始记录 <span aria-hidden="true">→</span></button>
                 </div>
                 <button class="text-button" id="showDemoButton" type="button" hidden>查看示例日记</button>
+                <div class="entry-list" id="entryList"></div>
+              </section>
+              <section class="week-section" aria-label="近七天情绪摘要">
                 <div class="week-status">
-                  <span class="eyebrow">近 7 天节奏</span>
+                  <h2>这一周</h2>
                   <span id="weekCount"></span>
                 </div>
                 <div class="mini-chart" id="miniChart" aria-label="近七天情绪强度，颜色表示当日常见感受"></div>
                 <p class="field-note mini-chart-note">高度：感受强度 · 颜色：常见情绪</p>
                 <div class="context-insight">
-                  <span class="insight-marker" aria-hidden="true"></span>
                   <p id="contextInsight"></p>
                 </div>
-                <div class="today-practice">
-                  <div class="practice-art" aria-hidden="true">
-                    <span class="breath-ring breath-ring-one"></span>
-                    <span class="breath-ring breath-ring-two"></span>
-                    <span class="breath-core"></span>
-                  </div>
-                  <div>
-                    <span>今日微练习</span>
-                    <strong>一分钟，回到呼吸</strong>
-                  </div>
-                  <button class="round-button" id="quickBreathButton" type="button" aria-label="开始一分钟呼吸" title="开始">
-                    <i data-lucide="play" aria-hidden="true"></i>
-                  </button>
-                </div>
-              </div>
+              </section>
+              <button class="today-practice" id="quickBreathButton" type="button">
+                <i data-lucide="wind" aria-hidden="true"></i>
+                <span>休息一下，跟随呼吸</span>
+                <span>1 分钟 <span aria-hidden="true">↗</span></span>
+              </button>
             </aside>
           </div>
         </section>
@@ -236,8 +208,8 @@
           <div class="wide-view">
             <header class="view-header">
               <div>
-                <p class="eyebrow" id="periodLabel">近 7 天 · 含今天</p>
-                <h1>回望，不是评判。</h1>
+                <h1>回顾</h1>
+                <p class="view-subtitle" id="periodLabel">近 7 天 · 含今天</p>
               </div>
               <div class="period-control" role="group" aria-label="趋势周期">
                 <button class="is-active" type="button" data-days="7">7 天</button>
@@ -249,26 +221,25 @@
             <div class="trend-summary">
               <div class="trend-kpi">
                 <span>最常记录的感受</span>
-                <strong id="averageMood">3.2</strong>
+                <strong id="averageMood">—</strong>
                 <small id="averageMoodLabel"></small>
               </div>
               <div class="trend-kpi">
                 <span>记录次数</span>
-                <strong id="totalEntries">5</strong>
-                <small>每一次都算数</small>
+                <strong id="totalEntries">0</strong>
+                <small>当前周期内</small>
               </div>
               <div class="trend-kpi">
                 <span>常见线索</span>
-                <strong class="trend-kpi-text" id="topTrigger">工作 / 学业</strong>
-                <small id="topTriggerCount">出现 3 次</small>
+                <strong class="trend-kpi-text" id="topTrigger">尚无线索</strong>
+                <small id="topTriggerCount"></small>
               </div>
             </div>
 
             <section class="trend-chart-section" aria-labelledby="trendTitle">
               <div class="section-heading chart-heading">
                 <div>
-                  <p class="eyebrow">情绪趋势</p>
-                  <h2 id="trendTitle">让感受变得可见</h2>
+                  <h2 id="trendTitle">情绪变化</h2>
                 </div>
                 <div class="chart-legend">
                   <span><i></i> 每次记录</span>
@@ -278,29 +249,27 @@
               <div class="chart-wrap">
                 <svg id="trendChart" viewBox="0 0 900 310" role="img" aria-label="按日期排列的情绪记录图，圆点大小代表感受强度"></svg>
               </div>
-              <p class="field-note">空白日期表示没有记录。每一种情绪都可以存在，这里没有好坏分数。</p>
+              <p class="field-note">每个圆点是一条日记，大小表示感受强度；空白日期表示没有记录。</p>
             </section>
 
             <div class="insight-layout">
               <section class="pattern-section" aria-labelledby="patternTitle">
-                <p class="eyebrow">触发因素</p>
-                <h2 id="patternTitle">反复出现的线索</h2>
+                <h2 id="patternTitle">常见触发因素</h2>
                 <div class="trigger-bars" id="triggerBars"></div>
               </section>
 
               <section class="reflection-section" aria-labelledby="reflectionTitle">
-                <p class="eyebrow">温和洞察</p>
-                <h2 id="reflectionTitle">从记录里多看见一点</h2>
+                <h2 id="reflectionTitle">值得留意</h2>
                 <blockquote id="reflectionText"></blockquote>
                 <button class="secondary-button" type="button" data-view="care">
-                  <span>看看适合我的关怀</span>
+                  <span>选择一项练习</span>
                   <i data-lucide="arrow-right" aria-hidden="true"></i>
                 </button>
               </section>
             </div>
             <section class="history-section" id="historySection" aria-labelledby="historyTitle">
               <div class="section-heading">
-                <div><p class="eyebrow">日记档案</p><h2 id="historyTitle">每一页都在这里</h2></div>
+                <h2 id="historyTitle">全部日记</h2>
                 <span class="field-note" id="historyCount" aria-live="polite"></span>
               </div>
               <div class="history-tools">
@@ -319,55 +288,47 @@
           <div class="care-view">
             <header class="view-header care-header">
               <div>
-                <p class="eyebrow">自我关怀</p>
-                <h1>先照顾此刻的你。</h1>
-                <p>根据近期记录，选择一件现在做得到的小事。</p>
+                <h1>休息与练习</h1>
+                <p>几分钟的呼吸、声音或活动，按你现在的需要选择。</p>
               </div>
               <div class="care-temperature">
-                <span>当前建议</span>
+                <span>根据最近一次记录</span>
                 <strong id="careHeadline">松开紧绷</strong>
               </div>
             </header>
 
             <section class="featured-practice" aria-labelledby="featuredPracticeTitle">
               <div class="featured-copy">
-                <span class="recommend-label"><i data-lucide="sparkles" aria-hidden="true"></i> 可以从这里开始</span>
-                <h2 id="featuredPracticeTitle">跟随呼吸，<br />把注意力带回身体</h2>
+                <span class="recommend-label">推荐练习</span>
+                <h2 id="featuredPracticeTitle">一分钟呼吸</h2>
                 <p id="featuredReason"></p>
-                <button class="inverse-button" id="featuredPracticeButton" type="button" data-practice="breath">
+                <div class="featured-caption" id="featuredCaption">
+                  <span>吸气 4 秒</span>
+                  <span>呼气 6 秒</span>
+                </div>
+              </div>
+              <div class="featured-action">
+                <span class="practice-duration" id="featuredDuration">01<span>分钟</span></span>
+                <button class="primary-button" id="featuredPracticeButton" type="button" data-practice="breath">
                   <i data-lucide="play" aria-hidden="true"></i>
                   <span>开始 1 分钟</span>
                 </button>
-              </div>
-              <div class="featured-visual" aria-hidden="true">
-                <div class="breathing-field">
-                  <span class="field-line field-line-one"></span>
-                  <span class="field-line field-line-two"></span>
-                  <span class="field-line field-line-three"></span>
-                  <span class="field-center"></span>
-                </div>
-                <div class="featured-caption" id="featuredCaption">
-                  <span>吸气</span>
-                  <span>停留</span>
-                  <span>呼气</span>
-                </div>
               </div>
             </section>
 
             <section class="care-library" aria-labelledby="careLibraryTitle">
               <div class="section-heading">
                 <div>
-                  <p class="eyebrow">按需选择</p>
-                  <h2 id="careLibraryTitle">今天做得到的事</h2>
+                  <h2 id="careLibraryTitle">所有练习</h2>
                 </div>
-                <span class="care-note">建议来自你的近期情绪线索</span>
+                <span class="care-note">随时可以暂停</span>
               </div>
 
               <div class="practice-list">
                 <button class="practice-row" type="button" data-practice="breath">
                   <span class="practice-index">01</span>
                   <span class="practice-icon practice-icon-sage"><i data-lucide="wind" aria-hidden="true"></i></span>
-                  <span class="practice-copy"><strong>一分钟，回到呼吸</strong><small>想暂停一下、安静片刻时</small></span>
+                  <span class="practice-copy"><strong>一分钟呼吸</strong><small>跟随吸气与呼气，暂停手头的事</small></span>
                   <span class="practice-meta">1 分钟</span>
                   <span class="practice-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></span>
                 </button>
@@ -385,7 +346,7 @@
                   <span class="practice-index">03</span>
                   <span class="practice-icon practice-icon-sage"><i data-lucide="footprints" aria-hidden="true"></i></span>
                   <span class="practice-copy">
-                    <strong>不带目标地走一会</strong>
+                    <strong>轻缓步行</strong>
                     <small>久坐后，身体允许的情况下</small>
                   </span>
                   <span class="practice-meta">10 分钟</span>
@@ -395,8 +356,8 @@
                   <span class="practice-index">04</span>
                   <span class="practice-icon practice-icon-ink"><i data-lucide="waves" aria-hidden="true"></i></span>
                   <span class="practice-copy">
-                    <strong>听一段缓慢的声音</strong>
-                    <small>睡前、通勤或需要独处时</small>
+                    <strong>舒缓环境音</strong>
+                    <small>缓慢变化的和音，适合休息时听</small>
                   </span>
                   <span class="practice-meta">5 分钟</span>
                   <span class="practice-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></span>
@@ -405,7 +366,7 @@
             </section>
 
             <section class="care-history" aria-labelledby="careHistoryTitle">
-              <div class="section-heading"><div><p class="eyebrow">练习之后</p><h2 id="careHistoryTitle">找到适合自己的方式</h2></div></div>
+              <div class="section-heading"><h2 id="careHistoryTitle">练习记录</h2></div>
               <p id="careHistorySummary" class="field-note">完成练习后，记下是否有帮助，慢慢找到自己的恢复方式。</p>
               <div id="careHistoryList"></div>
             </section>
@@ -414,8 +375,8 @@
               <div>
                 <i data-lucide="life-buoy" aria-hidden="true"></i>
                 <div>
-                  <h2 id="supportTitle">当感受重得难以独自承受</h2>
-                  <p>联系信任的人或专业支持，不必一个人扛着。</p>
+                  <h2 id="supportTitle">需要更多支持？</h2>
+                  <p>可以联系信任的人，或寻求专业帮助。</p>
                 </div>
               </div>
               <button class="text-button" id="supportButton" type="button">查看支持方式</button>
@@ -426,16 +387,16 @@
 
       <nav class="mobile-nav" aria-label="移动端导航">
         <button class="is-active" type="button" data-view="today" aria-current="page">
-          <i data-lucide="circle-dot" aria-hidden="true"></i>
-          <span>此刻</span>
+          <i data-lucide="notebook-pen" aria-hidden="true"></i>
+          <span>日记</span>
         </button>
         <button type="button" data-view="trends">
           <i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>
-          <span>回望</span>
+          <span>回顾</span>
         </button>
         <button type="button" data-view="care">
-          <i data-lucide="heart-handshake" aria-hidden="true"></i>
-          <span>关怀</span>
+          <i data-lucide="wind" aria-hidden="true"></i>
+          <span>练习</span>
         </button>
       </nav>
     </div>
@@ -470,9 +431,9 @@
           </button>
         </div>
         <section class="practice-feedback" id="practiceFeedback" aria-labelledby="feedbackTitle" hidden>
-          <p class="eyebrow">这几分钟，留给了自己</p>
+          <p class="eyebrow">练习完成</p>
           <h3 id="feedbackTitle">现在感觉怎么样？</h3>
-          <p>没有变化也没关系。这个感受只属于你。</p>
+          <p>记录这次的效果，方便下次选择。</p>
           <div class="feedback-options">
             <button type="button" data-feedback="helpful">松了一点</button>
             <button type="button" data-feedback="same">差不多</button>
@@ -497,11 +458,11 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite">
       <i data-lucide="check" aria-hidden="true"></i>
-      <span id="toastText">已经收好这一刻</span>
+      <span id="toastText">日记已保存</span>
     </div>
 
     <input id="importFile" type="file" accept=".json,application/json" hidden />
     <script src="./vendor/lucide.min.js"></script>
-    <script src="./app.js?v=2"></script>
+    <script src="./app.js?v=3"></script>
   </body>
 </html>

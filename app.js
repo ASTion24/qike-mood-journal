@@ -4,19 +4,19 @@ const CARE_KEY = "qike.care.v1";
 const MODE_KEY = "qike.demo.v1";
 
 const moodMeta = {
-  1: { label: "低落", color: "#82919a" },
-  2: { label: "疲惫", color: "#9b93ae" },
-  3: { label: "平静", color: "#718a74" },
-  4: { label: "轻快", color: "#d69a47" },
-  5: { label: "雀跃", color: "#ec6a55" },
+  1: { label: "低落", color: "#92979d" },
+  2: { label: "疲惫", color: "#a79b89" },
+  3: { label: "平静", color: "#7d928a" },
+  4: { label: "轻快", color: "#6685a4" },
+  5: { label: "雀跃", color: "#3e648e" },
 };
 
 const prompts = [
-  "这一刻，身体最先告诉了你什么？",
+  "今天有没有一件事，一直留在你脑海里？",
   "今天有没有一个瞬间，让情绪发生了变化？",
-  "如果这份感受会说话，它最想告诉你什么？",
-  "此刻你最希望被怎样理解？",
-  "有什么是你已经努力过、却还没来得及肯定自己的？",
+  "昨晚睡得怎么样？今天精神如何？",
+  "最近和谁相处时，你觉得比较放松？",
+  "如果明天少做一件事，你想先放下哪件？",
 ];
 
 const triggerKeywords = {
@@ -31,29 +31,29 @@ const crisisKeywords = ["不想活", "自杀", "伤害自己", "活不下去", "
 
 const practiceConfig = {
   breath: {
-    eyebrow: "一分钟练习",
-    title: "跟随呼吸",
+    eyebrow: "呼吸练习 · 1 分钟",
+    title: "一分钟呼吸",
     description: "自然吸气 4 秒，缓慢呼气 6 秒。不用屏息，也不用刻意深呼吸。",
     seconds: 60,
     mode: "breath",
   },
   grounding: {
-    eyebrow: "感官着陆",
-    title: "把注意力带回附近",
+    eyebrow: "感官练习 · 3 分钟",
+    title: "5-4-3-2-1 感官着陆",
     description: "慢慢寻找，不需要一次完成所有答案。",
     seconds: 180,
     mode: "grounding",
   },
   walk: {
-    eyebrow: "十分钟活动",
-    title: "不带目标地走一会",
+    eyebrow: "轻度活动 · 10 分钟",
+    title: "轻缓步行",
     description: "选择安全、平坦的地方，按舒适的速度走动。身体不适时请改为休息。",
     seconds: 600,
     mode: "walk",
   },
   sound: {
-    eyebrow: "舒缓声音",
-    title: "听一段缓慢的声音",
+    eyebrow: "声音练习 · 5 分钟",
+    title: "舒缓环境音",
     description: "一段缓慢变化的合成环境和音。先调低音量，不必刻意跟随它。",
     seconds: 300,
     mode: "sound",
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function cacheElements() {
   [
-    "dateLabel",
+    "dateLabel", "dateDay", "saveHelp", "featuredDuration",
     "checkinForm",
     "moodOptions",
     "intensity",
@@ -317,9 +317,12 @@ function bindEvents() {
 }
 
 function setDateLabel() {
-  const now = new Date();
+  const editing = state.entries.find((entry) => entry.id === state.editingId);
+  const now = editing ? new Date(editing.createdAt) : new Date();
   const weekday = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][now.getDay()];
-  els.dateLabel.textContent = `${now.getMonth() + 1}月${now.getDate()}日 · ${weekday}`;
+  document.getElementById("openingTitle").textContent = editing ? "编辑日记" : "今天的日记";
+  els.dateLabel.textContent = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 · ${weekday}`;
+  els.dateDay.textContent = String(now.getDate()).padStart(2, "0");
 }
 
 function loadEntries() {
@@ -411,6 +414,7 @@ function switchView(viewName, scroll = true) {
 
 function updateSaveState() {
   els.saveButton.disabled = !state.selectedMood;
+  els.saveHelp.textContent = state.selectedMood ? "只记录情绪也可以" : "先选择一种情绪";
 }
 
 function rotatePrompt() {
@@ -441,8 +445,8 @@ function evaluateSafetyHint() {
   const hasCrisisLanguage = crisisKeywords.some((keyword) => els.journalText.value.includes(keyword));
   els.supportHint.textContent = hasCrisisLanguage
     ? "你不必独自承受，保存后可以查看即时支持"
-    : "你的文字只会留在这台设备上";
-  els.supportHint.style.color = hasCrisisLanguage ? "#c94e3c" : "";
+    : "内容选填，草稿自动保存";
+  els.supportHint.style.color = hasCrisisLanguage ? "#a34132" : "";
 }
 
 function saveCheckin(event) {
@@ -459,7 +463,7 @@ function saveCheckin(event) {
     mood: state.selectedMood,
     score: state.selectedScore,
     intensity: Number(els.intensity.value),
-    text: text || "这一刻没有写下具体的事，只记录了此刻的感受。",
+    text: text || "只记录了情绪。",
     triggers: triggers.length ? triggers : ["说不清"],
   };
 
@@ -473,7 +477,7 @@ function saveCheckin(event) {
   showAnalysis(entry, inferred);
   resetForm();
   renderAll();
-  showToast(existing ? "这页日记已更新" : "已经收好这一刻");
+  showToast(existing ? "日记已更新" : "日记已保存");
 
   if (crisisKeywords.some((keyword) => text.includes(keyword))) {
     window.setTimeout(showSupport, 600);
@@ -489,21 +493,20 @@ function inferTriggers(text) {
 
 function showAnalysis(entry, inferred, scroll = true) {
   const strongFeeling = entry.intensity >= 4;
-  const lowMood = entry.score <= 2;
   const practice = recommendPractice(entry);
   const summaries = {
     1: strongFeeling
-      ? "这份低落现在占据了不少空间。先不急着解决所有事情，把注意力放回身体和身边能确认的事。"
-      : "你觉察到了一点向下的情绪。允许它短暂停留，也给自己留一件容易完成的小事。",
+      ? "你记录了较强的低落感。可以先暂停手头的事，试着描述几样身边看得见、摸得到的东西。"
+      : "这次记录是低落。回顾时可以留意，感受是从什么事情之后开始变化的。",
     2: entry.triggers.includes("睡眠")
-      ? "你记录了疲惫，也提到了睡眠。可以先看看自己是否需要休息，给今天减少一点消耗。"
-      : "你觉察到了疲惫。可以暂停一会，问问自己现在需要的是休息、陪伴，还是给任务减量。",
-    3: "你记录下了一份平静。可以留意这一刻周围的人、事和环境，把它们保存为下一次的线索。",
-    4: "这份轻快值得被记住。回看触发它的人、事或行动，会帮你找到可重复的能量来源。",
-    5: "你捕捉到了一个明亮的时刻。试着让这份感觉多停留几秒，它也会成为低潮时的证据。",
+      ? "你记录了疲惫，也选中了睡眠。今天可以留意休息是否充足，或记下昨晚的入睡时间。"
+      : "这次记录是疲惫。可以先休息几分钟，再看看哪些事情可以晚一点做。",
+    3: "这次记录是平静。下次回顾时，可以看看哪些环境或活动也出现在类似的记录里。",
+    4: "这次记录是轻快。可以记下让你放松的人或事，之后再回来看。",
+    5: "这次记录是雀跃。记下具体发生了什么，之后就能更容易回想起来。",
   };
 
-  els.analysisTitle.textContent = lowMood ? "谢谢你没有忽略自己" : "你已经看见了这份感受";
+  els.analysisTitle.textContent = "日记已保存";
   els.analysisMood.textContent = `${entry.mood} · 强度 ${entry.intensity}`;
   els.analysisSummary.textContent = summaries[entry.score];
   const suggestions = inferred.filter((trigger) => !entry.triggers.includes(trigger));
@@ -527,6 +530,7 @@ function recommendPractice(entry) {
 
 function resetForm() {
   state.editingId = null;
+  setDateLabel();
   state.selectedMood = null;
   state.selectedScore = null;
   state.selectedTriggers.clear();
@@ -537,9 +541,9 @@ function resetForm() {
   els.charCount.textContent = "0";
   els.intensity.value = "3";
   els.intensityValue.value = "3";
-  els.supportHint.textContent = "你的文字只会留在这台设备上";
+  els.supportHint.textContent = "内容选填，草稿自动保存";
   els.supportHint.style.color = "";
-  els.saveButton.querySelector("span").textContent = "收好这一刻";
+  els.saveButton.querySelector("span").textContent = "保存日记";
   els.draftStatus.hidden = true;
   renderTriggerSuggestions();
   updateSaveState();
@@ -575,7 +579,7 @@ function renderEntries() {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 3);
   if (!recent.length) {
-    els.entryList.innerHTML = '<div class="empty-state">还没有记录。下一次情绪经过时，可以先留下一句话。</div>';
+    els.entryList.innerHTML = '<div class="empty-state"><strong>第一篇，从今天开始。</strong>选一种情绪就能保存，文字可以以后再补。</div>';
     return;
   }
 
@@ -592,16 +596,16 @@ function entryMarkup(entry) {
             ${date.getMonth() + 1}月
           </time>
           <div class="entry-body">
-            <div class="entry-topline"><span>${date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}${state.demo ? " · 示例" : ""}</span><button class="text-button" type="button" data-entry="${escapeHtml(entry.id)}">阅读全文 <span aria-hidden="true">↗</span></button></div>
+            <div class="entry-topline"><span>${date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}${state.demo ? " · 示例" : ""}</span><button class="text-button" type="button" data-entry="${escapeHtml(entry.id)}" aria-label="查看${date.getMonth() + 1}月${date.getDate()}日的${escapeHtml(entry.mood)}日记">查看 <span aria-hidden="true">↗</span></button></div>
             <p>${escapeHtml(entry.text)}</p>
-            <div class="entry-tags">${entry.triggers
+            <div class="entry-bottom">
+              <span class="entry-mood" style="--entry-color:${meta.color}"><i></i>${escapeHtml(entry.mood)}</span>
+              <div class="entry-tags">${entry.triggers
               .slice(0, 3)
               .map((trigger) => `<span>${escapeHtml(trigger)}</span>`)
               .join("")}</div>
+            </div>
           </div>
-          <span class="entry-mood" style="--entry-color:${meta.color}">
-            <i></i>${escapeHtml(entry.mood)}
-          </span>
         </article>
       `;
 }
@@ -623,10 +627,10 @@ function renderMiniChart() {
   els.miniChart.innerHTML = values
     .map((value, index) => {
       const score = value?.intensity || 0.55;
-      const color = value ? moodMeta[value.score].color : "#d7d8d1";
+      const color = value ? moodMeta[value.score].color : "#dedfdc";
       return `
-        <div class="mini-bar-wrap" title="${value ? `${value.count} 次记录，平均强度 ${value.intensity.toFixed(1)}` : "没有记录"}">
-          <div class="mini-bar" style="height:${score * 18}%;--bar-color:${color};animation-delay:${index * 50}ms"></div>
+        <div class="mini-bar-wrap" title="${value ? `${value.count} 次记录，常见情绪：${moodMeta[value.score].label}，平均强度 ${value.intensity.toFixed(1)}` : "没有记录"}">
+          <div class="mini-bar" style="height:${score * 14}%;--bar-color:${color}"></div>
           <span>${labels[days[index].getDay()]}</span>
         </div>
       `;
@@ -639,10 +643,10 @@ function renderMiniChart() {
 }
 
 function buildContextInsight(entries) {
-  if (!entries.length) return "这一周还没有记录。情绪被看见的那一刻，变化就已经开始。";
+  if (!entries.length) return "近 7 天还没有记录。保存日记后，这里会显示情绪变化和常见线索。";
   const triggerCounts = countTriggers(entries);
   const top = Object.entries(triggerCounts).sort((a, b) => b[1] - a[1])[0];
-  if (top) return `近 7 天的 ${entries.length} 条${state.demo ? "示例" : ""}记录中，${top[1]} 条提到了「${top[0]}」。这是一条值得回顾的线索，还不能说明因果。`;
+  if (top) return `${entries.length} 条${state.demo ? "示例" : ""}记录中，${top[1]} 条提到「${top[0]}」。相关线索不代表因果关系。`;
   return `近 7 天留下了 ${entries.length} 次记录。线索可以慢慢补充，不需要立刻找到原因。`;
 }
 
@@ -730,7 +734,7 @@ function renderTriggerBars(counts) {
 
 function renderReflection(entries, top) {
   if (!entries.length) {
-    els.reflectionText.textContent = "“记录不是为了给情绪打分，而是逐渐辨认什么消耗你、什么让你恢复。”";
+    els.reflectionText.textContent = "这段时间还没有记录。写下情绪和相关事件后，这里会整理值得回顾的线索。";
     return;
   }
   const latest = [...entries].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
@@ -739,7 +743,7 @@ function renderReflection(entries, top) {
   } else if (top && top[0] === "睡眠") {
     els.reflectionText.textContent = `睡眠出现在 ${top[1]} 条记录里，但这些记录还无法区分睡眠质量。下次可以写下入睡时间和醒来的感受，帮助你更具体地回顾。`;
   } else if (latest.score >= 4) {
-    els.reflectionText.textContent = "“最近一次记录里有明显的轻快感。记住当时的人、地点和行动，它们可能是可以主动靠近的资源。”";
+    els.reflectionText.textContent = "最近一次记录是轻快或雀跃。可以回看当时的人、地点和活动，留意它们是否也出现在其他类似的记录里。";
   } else {
     els.reflectionText.textContent = `最近一次记录是「${latest.mood}」，感受强度 ${latest.intensity}/5。可以回看当时发生了什么，再为自己选择一件容易做到的小事。`;
   }
@@ -749,25 +753,20 @@ function updateCareRecommendation() {
   const latest = [...displayEntries()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
   const recommendation = latest ? recommendPractice(latest) : { key: "breath" };
   const config = practiceConfig[recommendation.key];
-  const titles = {
-    breath: "跟随呼吸，\n把注意力带回身体",
-    grounding: "从身边的事物，\n找到一点安定",
-    walk: "离开屏幕，\n给身体一点空间",
-    sound: "让缓慢的声音，\n陪你休息一会",
-  };
   const captions = {
-    breath: ["吸气 4 秒", "自然呼吸", "呼气 6 秒"],
-    grounding: ["看见", "触碰", "听见"],
-    walk: ["脚步", "空气", "远处"],
-    sound: ["调低音量", "慢慢听", "不必用力"],
+    breath: ["吸气 4 秒", "呼气 6 秒", "无需屏息"],
+    grounding: ["观察周围", "依次跟随 5 个提示"],
+    walk: ["舒适的步速", "留意身体和周围"],
+    sound: ["缓慢和音", "音量可调"],
   };
   els.careHeadline.textContent = { breath: "回到呼吸", grounding: "回到当下", walk: "舒展身体", sound: "安静休息" }[recommendation.key];
-  els.featuredPracticeTitle.textContent = titles[recommendation.key];
+  els.featuredPracticeTitle.textContent = config.title;
   els.featuredReason.textContent = latest
     ? `${state.demo ? "示例中" : ""}最近一次记录是「${latest.mood}」，强度 ${latest.intensity}/5${latest.triggers[0] !== "说不清" ? `，提到了${latest.triggers.join("、")}` : ""}。可以试试${config.title}。`
-    : "先用一分钟觉察呼吸，再选择接下来想做的事。也可以直接挑选下方的练习。";
+    : "还没有日记时，可以先试试一分钟呼吸：自然吸气 4 秒，缓慢呼气 6 秒。";
   els.featuredPracticeButton.dataset.practice = recommendation.key;
   els.featuredPracticeButton.querySelector("span").textContent = `开始 ${config.seconds / 60} 分钟`;
+  els.featuredDuration.innerHTML = `${String(config.seconds / 60).padStart(2, "0")}<span>分钟</span>`;
   els.featuredCaption.innerHTML = captions[recommendation.key].map((caption) => `<span>${caption}</span>`).join("");
 }
 
@@ -904,7 +903,7 @@ function completePractice() {
   els.soundVolumeLabel.hidden = true;
   els.practiceFeedback.hidden = false;
   renderCareHistory();
-  showToast("你为自己留出了一点空间");
+  showToast("练习完成，可以记录这次的感受");
   state.practiceRemaining = practiceConfig[state.activePractice].seconds;
 }
 
@@ -1263,7 +1262,7 @@ function setDemo(enabled) {
 function renderDemoState() {
   els.demoNotice.hidden = !state.demo;
   els.showDemoButton.hidden = state.demo;
-  document.getElementById("recentTitle").textContent = state.demo ? "示例日记的一周" : "情绪留下的纹理";
+  document.getElementById("recentTitle").textContent = state.demo ? "最近日记 · 示例" : "最近日记";
 }
 
 function showSaveError(message) {
@@ -1283,7 +1282,7 @@ function renderTriggerSuggestions() {
   });
   els.triggerHint.textContent = suggested.some((trigger) => !state.selectedTriggers.has(trigger))
     ? "虚线标签是文字里的可能线索，点击确认后才会纳入统计。"
-    : "你可以只记录情绪，也可以点选相关线索。";
+    : "选中的线索会用于回顾情绪变化。";
 }
 
 function saveDraft() {
@@ -1323,6 +1322,7 @@ function restoreDraft() {
 }
 
 function populateForm(entry) {
+  setDateLabel();
   state.selectedMood = entry.mood;
   state.selectedScore = entry.score;
   state.selectedTriggers = new Set(entry.triggers);
@@ -1333,7 +1333,7 @@ function populateForm(entry) {
   els.charCount.textContent = String(entry.text.length);
   els.intensity.value = String(entry.intensity);
   els.intensityValue.value = String(entry.intensity);
-  els.saveButton.querySelector("span").textContent = state.editingId ? "保存修改" : "收好这一刻";
+  els.saveButton.querySelector("span").textContent = state.editingId ? "保存修改" : "保存日记";
   renderTriggerSuggestions();
   evaluateSafetyHint();
   updateSaveState();
@@ -1349,7 +1349,7 @@ function renderHistory() {
   els.historyCount.textContent = `${state.demo ? "示例 · " : ""}${entries.length} 条记录`;
   els.historyList.innerHTML = entries.length
     ? entries.map(entryMarkup).join("")
-    : '<p class="empty-state">没有匹配的日记。试试其他文字或情绪，或回到「此刻」开始记录。</p>';
+    : '<p class="empty-state">没有匹配的日记。试试其他关键词或情绪，或回到「日记」开始记录。</p>';
 }
 
 function showEntry(id) {
@@ -1430,7 +1430,7 @@ function saveFeedback(feedback) {
   els.feedbackSaved.hidden = false;
   els.feedbackSaved.textContent = {
     helpful: "已记下。下次需要时，可以再试试这个方法。",
-    same: "已记下。没有立刻变化也没关系，愿意照顾自己就很珍贵。",
+    same: "已记下。下次可以换一种练习，看看哪种更适合你。",
     worse: "已记下。先停止这项练习，按舒适的方式休息；如果持续不适，请联系专业人员。",
   }[feedback];
   renderCareHistory();
