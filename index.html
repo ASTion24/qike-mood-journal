@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f5f4f0" />
+    <meta name="theme-color" content="#f6f3ed" />
     <meta
       name="description"
       content="栖刻是一款轻量的情绪日记与自我关怀工具，帮助你记录、理解并照顾当下的感受。"
     />
     <title>栖刻 · 情绪日记与自我关怀</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="./styles.css?v=3" />
+    <link rel="stylesheet" href="./styles.css?v=4" />
   </head>
   <body>
     <a class="skip-link" href="#openingTitle">跳到情绪记录</a>
@@ -18,8 +18,8 @@
       <header class="app-header">
         <div class="header-inner">
           <button class="brand" type="button" data-view="today" aria-label="栖刻，回到日记">
-            <span class="brand-mark" aria-hidden="true"><i></i></span>
             <span class="brand-name">栖刻</span>
+            <span class="brand-caption">情绪日记</span>
           </button>
           <nav class="nav-list" aria-label="主导航">
             <button class="nav-item is-active" type="button" data-view="today" aria-current="page">
@@ -50,41 +50,45 @@
             <div class="primary-column">
               <div class="journal-paper">
                 <header class="opening">
-                  <div>
+                  <div class="opening-date">
+                    <span id="dateDay" class="date-day" aria-hidden="true"></span>
+                    <span id="dateMonth" class="date-month" aria-hidden="true"></span>
+                  </div>
+                  <div class="opening-copy">
                     <h1 id="openingTitle" tabindex="-1">今天的日记</h1>
                     <p id="dateLabel"></p>
                   </div>
-                  <span class="date-day" id="dateDay" aria-hidden="true"></span>
+                  <span class="page-bookmark" aria-hidden="true"></span>
                 </header>
               <form class="checkin-form" id="checkinForm">
                 <fieldset class="mood-fieldset">
-                  <legend>现在感觉怎么样？</legend>
+                  <legend>现在的心情</legend>
                   <div class="mood-options" id="moodOptions">
                     <button type="button" class="mood-button" data-mood="低落" data-score="1" aria-pressed="false">
-                      <span class="mood-face mood-face-low" aria-hidden="true"><i></i></span>
+                      <span class="mood-face mood-face-low" aria-hidden="true"><i></i><b></b></span>
                       <span>低落</span>
                     </button>
                     <button type="button" class="mood-button" data-mood="疲惫" data-score="2" aria-pressed="false">
-                      <span class="mood-face mood-face-tired" aria-hidden="true"><i></i></span>
+                      <span class="mood-face mood-face-tired" aria-hidden="true"><i></i><b></b></span>
                       <span>疲惫</span>
                     </button>
                     <button type="button" class="mood-button" data-mood="平静" data-score="3" aria-pressed="false">
-                      <span class="mood-face mood-face-calm" aria-hidden="true"><i></i></span>
+                      <span class="mood-face mood-face-calm" aria-hidden="true"><i></i><b></b></span>
                       <span>平静</span>
                     </button>
                     <button type="button" class="mood-button" data-mood="轻快" data-score="4" aria-pressed="false">
-                      <span class="mood-face mood-face-light" aria-hidden="true"><i></i></span>
+                      <span class="mood-face mood-face-light" aria-hidden="true"><i></i><b></b></span>
                       <span>轻快</span>
                     </button>
                     <button type="button" class="mood-button" data-mood="雀跃" data-score="5" aria-pressed="false">
-                      <span class="mood-face mood-face-bright" aria-hidden="true"><i></i></span>
+                      <span class="mood-face mood-face-bright" aria-hidden="true"><i></i><b></b></span>
                       <span>雀跃</span>
                     </button>
                   </div>
                 </fieldset>
 
                 <div class="intensity-row">
-                  <label for="intensity">感受强度</label>
+                  <label for="intensity">有多强烈</label>
                   <div class="range-wrap">
                     <input id="intensity" type="range" min="1" max="5" value="3" />
                     <div class="range-labels" aria-hidden="true">
@@ -96,7 +100,7 @@
 
                 <div class="journal-block">
                   <div class="journal-heading">
-                    <label for="journalText">发生了什么？</label>
+                    <label for="journalText">写几句今天的事</label>
                     <button class="prompt-button" id="promptButton" type="button">
                       <i data-lucide="shuffle" aria-hidden="true"></i>
                       <span>换个问题</span>
@@ -107,7 +111,7 @@
                     id="journalText"
                     rows="5"
                     maxlength="360"
-                    placeholder="从这里开始写，几个词也可以。"
+                    placeholder="此刻，我想记下……"
                   ></textarea>
                   <div class="textarea-meta">
                     <span id="supportHint">内容选填，草稿自动保存</span>
@@ -116,7 +120,7 @@
                 </div>
 
                 <div class="trigger-block">
-                  <div class="field-label">与什么有关<span>选填 · 可多选</span></div>
+                  <div class="field-label">可能与这些有关<span>选填 · 可多选</span></div>
                   <div class="trigger-options" id="triggerOptions">
                     <button type="button" data-trigger="工作/学业" aria-pressed="false">工作 / 学业</button>
                     <button type="button" data-trigger="人际关系" aria-pressed="false">人际关系</button>
@@ -131,7 +135,7 @@
                 <div class="form-action">
                   <button class="primary-button" type="submit" id="saveButton" disabled>
                     <span>保存日记</span>
-                    <i data-lucide="check" aria-hidden="true"></i>
+                    <i data-lucide="arrow-right" aria-hidden="true"></i>
                   </button>
                   <div class="save-status">
                     <div class="draft-status" id="draftStatus" aria-live="polite" hidden>
@@ -172,35 +176,46 @@
             </div>
 
             <aside class="context-column" aria-label="最近日记与本周记录">
+              <section class="calendar-section" aria-labelledby="calendarTitle">
+                <div class="calendar-heading">
+                  <div><span class="calendar-kicker">情绪日历</span><h2 id="calendarTitle"></h2></div>
+                  <div class="calendar-controls">
+                    <button type="button" class="icon-button" id="calendarPrev" aria-label="上个月"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
+                    <button type="button" class="icon-button" id="calendarNext" aria-label="下个月"><i data-lucide="chevron-right" aria-hidden="true"></i></button>
+                  </div>
+                </div>
+                <div class="calendar-weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+                <div class="calendar-grid" id="calendarGrid" aria-label="有记录的日期可以点击回看"></div>
+                <div class="calendar-foot"><span id="calendarSummary"></span><button class="text-button" id="calendarToday" type="button">回到本月</button></div>
+              </section>
               <section class="recent-section" aria-labelledby="recentTitle">
                 <div class="section-heading">
                   <h2 id="recentTitle">最近日记</h2>
+                  <button class="text-button" id="clearDateFilter" type="button" hidden>显示最近</button>
                   <button class="text-button" type="button" id="viewHistoryButton">查看全部 <span aria-hidden="true">↗</span></button>
                 </div>
                 <div class="demo-notice" id="demoNotice">
-                  <p>正在浏览示例。写下第一篇日记后，这里会换成你的记录。</p>
-                  <button class="text-button" id="startPersonalButton" type="button">收起示例，开始记录 <span aria-hidden="true">→</span></button>
+                  <p>示例日记，仅供体验</p>
+                  <button class="text-button" id="startPersonalButton" type="button">开始我的记录 <span aria-hidden="true">→</span></button>
                 </div>
                 <button class="text-button" id="showDemoButton" type="button" hidden>查看示例日记</button>
                 <div class="entry-list" id="entryList"></div>
               </section>
-              <section class="week-section" aria-label="近七天情绪摘要">
-                <div class="week-status">
-                  <h2>这一周</h2>
-                  <span id="weekCount"></span>
-                </div>
-                <div class="mini-chart" id="miniChart" aria-label="近七天情绪强度，颜色表示当日常见感受"></div>
-                <p class="field-note mini-chart-note">高度：感受强度 · 颜色：常见情绪</p>
-                <div class="context-insight">
-                  <p id="contextInsight"></p>
-                </div>
-              </section>
-              <button class="today-practice" id="quickBreathButton" type="button">
-                <i data-lucide="wind" aria-hidden="true"></i>
-                <span>休息一下，跟随呼吸</span>
-                <span>1 分钟 <span aria-hidden="true">↗</span></span>
-              </button>
             </aside>
+          </div>
+          <div class="journal-bottom">
+            <section class="week-section" aria-label="近七天情绪摘要">
+              <div class="week-status"><h2>这一周</h2><span id="weekCount"></span></div>
+              <div class="week-detail">
+                <div class="mini-chart" id="miniChart" aria-label="近七天情绪强度，颜色表示当日常见感受"></div>
+                <div class="context-insight"><p id="contextInsight"></p><p class="mini-chart-note">柱高表示强度，颜色表示常见情绪</p></div>
+              </div>
+            </section>
+            <button class="today-practice" id="quickBreathButton" type="button">
+              <i data-lucide="wind" aria-hidden="true"></i>
+              <span><strong>给自己一分钟</strong><small>跟随呼吸，休息一下</small></span>
+              <span class="practice-shortcut-arrow" aria-hidden="true">↗</span>
+            </button>
           </div>
         </section>
 
@@ -463,6 +478,6 @@
 
     <input id="importFile" type="file" accept=".json,application/json" hidden />
     <script src="./vendor/lucide.min.js"></script>
-    <script src="./app.js?v=3"></script>
+    <script src="./app.js?v=4"></script>
   </body>
 </html>

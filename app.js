@@ -4,11 +4,11 @@ const CARE_KEY = "qike.care.v1";
 const MODE_KEY = "qike.demo.v1";
 
 const moodMeta = {
-  1: { label: "低落", color: "#92979d" },
-  2: { label: "疲惫", color: "#a79b89" },
-  3: { label: "平静", color: "#7d928a" },
-  4: { label: "轻快", color: "#6685a4" },
-  5: { label: "雀跃", color: "#3e648e" },
+  1: { label: "低落", color: "#8197a2", pale: "#dfe5e8", ink: "#536b78" },
+  2: { label: "疲惫", color: "#a193b0", pale: "#e6e2eb", ink: "#756584" },
+  3: { label: "平静", color: "#95a17e", pale: "#e1e7d9", ink: "#5d6d4c" },
+  4: { label: "轻快", color: "#c4ab6b", pale: "#f2e7c6", ink: "#846e39" },
+  5: { label: "雀跃", color: "#c59477", pale: "#f0d7c6", ink: "#976147" },
 };
 
 const prompts = [
@@ -83,6 +83,8 @@ const state = {
   audioContext: null,
   audioNodes: [],
   toastTimer: null,
+  calendarMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  selectedDate: null,
 };
 
 const els = {};
@@ -104,7 +106,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function cacheElements() {
   [
-    "dateLabel", "dateDay", "saveHelp", "featuredDuration",
+    "dateLabel", "dateDay", "dateMonth", "saveHelp", "featuredDuration",
+    "calendarTitle", "calendarGrid", "calendarPrev", "calendarNext", "calendarToday",
+    "calendarSummary", "clearDateFilter",
     "checkinForm",
     "moodOptions",
     "intensity",
@@ -251,6 +255,26 @@ function bindEvents() {
     document.querySelector('[data-mood="平静"]').focus({ preventScroll: true });
   });
   els.showDemoButton.addEventListener("click", () => setDemo(true));
+  els.calendarPrev.addEventListener("click", () => changeCalendarMonth(-1));
+  els.calendarNext.addEventListener("click", () => changeCalendarMonth(1));
+  els.calendarToday.addEventListener("click", () => {
+    resetCalendar();
+    renderCalendar();
+    renderEntries();
+  });
+  els.clearDateFilter.addEventListener("click", () => {
+    state.selectedDate = null;
+    renderCalendar();
+    renderEntries();
+  });
+  els.calendarGrid.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-date]");
+    if (!button || button.disabled) return;
+    state.selectedDate = state.selectedDate === button.dataset.date ? null : button.dataset.date;
+    renderCalendar();
+    renderEntries();
+    els.calendarGrid.querySelector(`[data-date="${button.dataset.date}"]`)?.focus({ preventScroll: true });
+  });
   els.viewHistoryButton.addEventListener("click", () => {
     switchView("trends", false);
     document.getElementById("historySection").scrollIntoView({ behavior: "smooth" });
@@ -308,6 +332,7 @@ function bindEvents() {
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
       setDateLabel();
+      renderCalendar();
       if (state.practiceRunning) tickPractice();
     }
   });
@@ -323,6 +348,7 @@ function setDateLabel() {
   document.getElementById("openingTitle").textContent = editing ? "编辑日记" : "今天的日记";
   els.dateLabel.textContent = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 · ${weekday}`;
   els.dateDay.textContent = String(now.getDate()).padStart(2, "0");
+  els.dateMonth.textContent = `${String(now.getMonth() + 1).padStart(2, "0")} / ${now.getFullYear()}`;
 }
 
 function loadEntries() {
@@ -472,6 +498,7 @@ function saveCheckin(event) {
     : [entry, ...state.entries];
   if (!persistEntries(next)) return;
   state.demo = false;
+  resetCalendar();
   writeLocal(MODE_KEY, "false");
   removeLocal(DRAFT_KEY);
   showAnalysis(entry, inferred);
@@ -565,6 +592,7 @@ function persistEntries(next) {
 
 function renderAll() {
   renderDemoState();
+  renderCalendar();
   renderEntries();
   renderHistory();
   renderMiniChart();
@@ -575,15 +603,77 @@ function renderAll() {
 }
 
 function renderEntries() {
-  const recent = [...displayEntries()]
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 3);
+  const sorted = [...displayEntries()]
+    .filter((entry) => !state.selectedDate || localDateKey(new Date(entry.createdAt)) === state.selectedDate)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const recent = state.selectedDate ? sorted : sorted.slice(0, 3);
+  document.getElementById("recentTitle").textContent = state.selectedDate
+    ? `${Number(state.selectedDate.slice(5, 7))} 月 ${Number(state.selectedDate.slice(8))} 日`
+    : "最近日记";
+  els.clearDateFilter.hidden = !state.selectedDate;
+  els.viewHistoryButton.hidden = !!state.selectedDate;
   if (!recent.length) {
     els.entryList.innerHTML = '<div class="empty-state"><strong>第一篇，从今天开始。</strong>选一种情绪就能保存，文字可以以后再补。</div>';
     return;
   }
 
   els.entryList.innerHTML = recent.map(entryMarkup).join("");
+}
+
+function localDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function resetCalendar() {
+  const today = new Date();
+  state.calendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  state.selectedDate = null;
+}
+
+function changeCalendarMonth(offset) {
+  const candidate = new Date(state.calendarMonth.getFullYear(), state.calendarMonth.getMonth() + offset, 1);
+  const today = new Date();
+  if (candidate > new Date(today.getFullYear(), today.getMonth(), 1) || candidate.getFullYear() < 1900) return;
+  state.calendarMonth = candidate;
+  state.selectedDate = null;
+  renderCalendar();
+  renderEntries();
+}
+
+function renderCalendar() {
+  const year = state.calendarMonth.getFullYear();
+  const month = state.calendarMonth.getMonth();
+  const today = new Date();
+  const currentMonth = year === today.getFullYear() && month === today.getMonth();
+  const monthNames = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"];
+  els.calendarTitle.innerHTML = `${monthNames[month]}月<small>${year}</small>`;
+  els.calendarNext.disabled = currentMonth;
+  els.calendarPrev.disabled = year <= 1900 && month === 0;
+  els.calendarToday.hidden = currentMonth && !state.selectedDate;
+  const records = new Map();
+  displayEntries().forEach((entry) => {
+    const date = new Date(entry.createdAt);
+    if (date.getFullYear() !== year || date.getMonth() !== month) return;
+    const key = localDateKey(date);
+    if (!records.has(key)) records.set(key, []);
+    records.get(key).push(entry);
+  });
+  const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+  const days = new Date(year, month + 1, 0).getDate();
+  const blanks = Array.from({ length: offset }, () => '<span aria-hidden="true"></span>').join("");
+  const dates = Array.from({ length: days }, (_, index) => {
+    const date = new Date(year, month, index + 1);
+    const key = localDateKey(date);
+    const entries = records.get(key) || [];
+    const common = mostFrequentMood(entries);
+    const meta = common ? moodMeta[common.score] : null;
+    const isToday = isSameDay(date, today);
+    const classes = `calendar-day${entries.length ? " has-entry" : ""}${isToday ? " is-today" : ""}`;
+    const label = `${year}年${month + 1}月${index + 1}日${isToday ? "，今天" : ""}，${entries.length ? `${entries.length}条${state.demo ? "示例" : ""}记录，常见情绪${meta.label}` : "无记录"}`;
+    return `<button type="button" class="${classes}" data-date="${key}" aria-label="${label}" aria-pressed="${state.selectedDate === key}" ${entries.length ? "" : "disabled"} ${isToday ? 'aria-current="date"' : ""} ${meta ? `style="--day-bg:${meta.pale};--day-ink:${meta.ink}"` : ""}>${index + 1}</button>`;
+  }).join("");
+  els.calendarGrid.innerHTML = blanks + dates;
+  els.calendarSummary.textContent = `${state.demo ? "示例 · " : ""}本月记录 ${records.size} 天${records.size ? " · 点选日期回看" : ""}`;
 }
 
 function entryMarkup(entry) {
@@ -1254,6 +1344,7 @@ function displayEntries() {
 
 function setDemo(enabled) {
   state.demo = enabled;
+  resetCalendar();
   writeLocal(MODE_KEY, String(enabled));
   els.analysisResult.hidden = true;
   renderAll();
@@ -1262,7 +1353,6 @@ function setDemo(enabled) {
 function renderDemoState() {
   els.demoNotice.hidden = !state.demo;
   els.showDemoButton.hidden = state.demo;
-  document.getElementById("recentTitle").textContent = state.demo ? "最近日记 · 示例" : "最近日记";
 }
 
 function showSaveError(message) {
