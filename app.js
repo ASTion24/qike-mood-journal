@@ -106,7 +106,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function cacheElements() {
   [
-    "dateLabel", "dateDay", "dateMonth", "saveHelp", "featuredDuration",
+    "dateLabel", "saveHelp", "featuredDuration",
+    "checkinOpening", "checkinDetails", "checkinHint", "writingToggle", "optionalWriting",
+    "newEntryButton", "savedEntryText", "todaySummary",
+    "recentEntriesButton", "recentSection", "historySection",
     "calendarTitle", "calendarGrid", "calendarPrev", "calendarNext", "calendarToday",
     "calendarSummary", "clearDateFilter",
     "checkinForm",
@@ -224,6 +227,15 @@ function bindEvents() {
   });
 
   els.checkinForm.addEventListener("submit", saveCheckin);
+  els.writingToggle.addEventListener("click", () => {
+    const expanded = els.optionalWriting.hidden;
+    setWritingExpanded(expanded);
+    if (expanded) els.journalText.focus({ preventScroll: true });
+  });
+  els.newEntryButton.addEventListener("click", () => {
+    resetForm();
+    document.querySelector('[data-mood="平静"]').focus({ preventScroll: true });
+  });
   els.suggestedCareButton.addEventListener("click", () => openPractice(els.suggestedCareButton.dataset.practice || "breath"));
   els.quickBreathButton.addEventListener("click", () => openPractice("breath"));
 
@@ -271,15 +283,16 @@ function bindEvents() {
     const button = event.target.closest("[data-date]");
     if (!button || button.disabled) return;
     state.selectedDate = state.selectedDate === button.dataset.date ? null : button.dataset.date;
+    setJournalScope("recent");
     renderCalendar();
     renderEntries();
     els.calendarGrid.querySelector(`[data-date="${button.dataset.date}"]`)?.focus({ preventScroll: true });
   });
   els.viewHistoryButton.addEventListener("click", () => {
-    switchView("trends", false);
-    document.getElementById("historySection").scrollIntoView({ behavior: "smooth" });
+    setJournalScope("all");
     els.historySearch.focus({ preventScroll: true });
   });
+  els.recentEntriesButton.addEventListener("click", () => setJournalScope("recent"));
   els.historySearch.addEventListener("input", renderHistory);
   els.historyMood.addEventListener("change", renderHistory);
   [els.entryList, els.historyList].forEach((list) => {
@@ -291,6 +304,7 @@ function bindEvents() {
   els.discardDraftButton.addEventListener("click", () => {
     resetForm();
     removeLocal(DRAFT_KEY);
+    document.getElementById("openingTitle").focus({ preventScroll: true });
     showToast("草稿已丢弃");
   });
   els.importFile.addEventListener("change", importData);
@@ -345,10 +359,8 @@ function setDateLabel() {
   const editing = state.entries.find((entry) => entry.id === state.editingId);
   const now = editing ? new Date(editing.createdAt) : new Date();
   const weekday = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][now.getDay()];
-  document.getElementById("openingTitle").textContent = editing ? "编辑日记" : "今天的日记";
+  document.getElementById("openingTitle").textContent = editing ? "编辑这一刻" : "现在，感觉怎么样？";
   els.dateLabel.textContent = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 · ${weekday}`;
-  els.dateDay.textContent = String(now.getDate()).padStart(2, "0");
-  els.dateMonth.textContent = `${String(now.getMonth() + 1).padStart(2, "0")} / ${now.getFullYear()}`;
 }
 
 function loadEntries() {
@@ -423,6 +435,7 @@ function dateOffset(days, hour, minute) {
 }
 
 function switchView(viewName, scroll = true) {
+  if (viewName === "today" && els.checkinForm.hidden) resetForm();
   document.querySelectorAll("[data-view-panel]").forEach((panel) => {
     const visible = panel.dataset.viewPanel === viewName;
     panel.hidden = !visible;
@@ -441,6 +454,26 @@ function switchView(viewName, scroll = true) {
 function updateSaveState() {
   els.saveButton.disabled = !state.selectedMood;
   els.saveHelp.textContent = state.selectedMood ? "只记录情绪也可以" : "先选择一种情绪";
+  const composing = !!(state.selectedMood || els.journalText.value || state.selectedTriggers.size || state.editingId);
+  els.checkinDetails.hidden = !composing;
+  els.checkinHint.hidden = composing;
+  document.getElementById("todayView").classList.toggle("is-composing", composing);
+}
+
+function setWritingExpanded(expanded) {
+  els.optionalWriting.hidden = !expanded;
+  els.writingToggle.setAttribute("aria-expanded", String(expanded));
+  document.getElementById("todayView").classList.toggle("is-writing", expanded);
+}
+
+function setJournalScope(scope) {
+  const all = scope === "all";
+  els.historySection.hidden = !all;
+  els.recentSection.hidden = all;
+  els.viewHistoryButton.classList.toggle("is-active", all);
+  els.viewHistoryButton.setAttribute("aria-pressed", String(all));
+  els.recentEntriesButton.classList.toggle("is-active", !all);
+  els.recentEntriesButton.setAttribute("aria-pressed", String(!all));
 }
 
 function rotatePrompt() {
@@ -501,8 +534,9 @@ function saveCheckin(event) {
   resetCalendar();
   writeLocal(MODE_KEY, "false");
   removeLocal(DRAFT_KEY);
-  showAnalysis(entry, inferred);
   resetForm();
+  setJournalScope("recent");
+  showAnalysis(entry, inferred);
   renderAll();
   showToast(existing ? "日记已更新" : "日记已保存");
 
@@ -535,6 +569,8 @@ function showAnalysis(entry, inferred, scroll = true) {
 
   els.analysisTitle.textContent = "日记已保存";
   els.analysisMood.textContent = `${entry.mood} · 强度 ${entry.intensity}`;
+  els.savedEntryText.textContent = entry.text;
+  els.savedEntryText.hidden = entry.text === "只记录了情绪。";
   els.analysisSummary.textContent = summaries[entry.score];
   const suggestions = inferred.filter((trigger) => !entry.triggers.includes(trigger));
   els.analysisTags.innerHTML = entry.triggers
@@ -545,7 +581,14 @@ function showAnalysis(entry, inferred, scroll = true) {
   els.suggestedCareButton.dataset.practice = practice.key;
   els.analysisResult.hidden = false;
   els.analysisResult.dataset.entry = entry.id;
-  if (scroll) requestAnimationFrame(() => els.analysisResult.scrollIntoView({ behavior: "smooth", block: "center" }));
+  els.checkinForm.hidden = true;
+  els.checkinOpening.hidden = true;
+  document.getElementById("todayView").classList.remove("is-composing");
+  if (scroll) requestAnimationFrame(() => {
+    els.analysisTitle.setAttribute("tabindex", "-1");
+    els.analysisTitle.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 }
 
 function recommendPractice(entry) {
@@ -556,6 +599,8 @@ function recommendPractice(entry) {
 }
 
 function resetForm() {
+  window.clearTimeout(state.toastTimer);
+  els.toast.classList.remove("is-visible");
   state.editingId = null;
   setDateLabel();
   state.selectedMood = null;
@@ -570,8 +615,13 @@ function resetForm() {
   els.intensityValue.value = "3";
   els.supportHint.textContent = "内容选填，草稿自动保存";
   els.supportHint.style.color = "";
-  els.saveButton.querySelector("span").textContent = "保存日记";
+  els.saveButton.querySelector("span").textContent = "记下此刻";
   els.draftStatus.hidden = true;
+  els.checkinForm.hidden = false;
+  els.checkinOpening.hidden = false;
+  els.analysisResult.hidden = true;
+  if (!state.storageError) els.saveError.hidden = true;
+  setWritingExpanded(false);
   renderTriggerSuggestions();
   updateSaveState();
 }
@@ -599,6 +649,8 @@ function renderAll() {
   renderTrends();
   updateCareRecommendation();
   renderCareHistory();
+  const todayCount = state.entries.filter((entry) => isSameDay(new Date(entry.createdAt), new Date())).length;
+  els.todaySummary.textContent = todayCount ? `今天已记录 ${todayCount} 次` : "今天还没有记录";
   refreshIcons();
 }
 
@@ -611,7 +663,6 @@ function renderEntries() {
     ? `${Number(state.selectedDate.slice(5, 7))} 月 ${Number(state.selectedDate.slice(8))} 日`
     : "最近日记";
   els.clearDateFilter.hidden = !state.selectedDate;
-  els.viewHistoryButton.hidden = !!state.selectedDate;
   if (!recent.length) {
     els.entryList.innerHTML = '<div class="empty-state"><strong>第一篇，从今天开始。</strong>选一种情绪就能保存，文字可以以后再补。</div>';
     return;
@@ -1347,6 +1398,8 @@ function setDemo(enabled) {
   resetCalendar();
   writeLocal(MODE_KEY, String(enabled));
   els.analysisResult.hidden = true;
+  els.checkinForm.hidden = false;
+  els.checkinOpening.hidden = false;
   renderAll();
 }
 
@@ -1423,7 +1476,11 @@ function populateForm(entry) {
   els.charCount.textContent = String(entry.text.length);
   els.intensity.value = String(entry.intensity);
   els.intensityValue.value = String(entry.intensity);
-  els.saveButton.querySelector("span").textContent = state.editingId ? "保存修改" : "保存日记";
+  els.saveButton.querySelector("span").textContent = state.editingId ? "保存修改" : "记下此刻";
+  els.checkinForm.hidden = false;
+  els.checkinOpening.hidden = false;
+  els.analysisResult.hidden = true;
+  setWritingExpanded(!!(entry.text || entry.triggers.length || state.editingId));
   renderTriggerSuggestions();
   evaluateSafetyHint();
   updateSaveState();
@@ -1439,7 +1496,7 @@ function renderHistory() {
   els.historyCount.textContent = `${state.demo ? "示例 · " : ""}${entries.length} 条记录`;
   els.historyList.innerHTML = entries.length
     ? entries.map(entryMarkup).join("")
-    : '<p class="empty-state">没有匹配的日记。试试其他关键词或情绪，或回到「日记」开始记录。</p>';
+    : '<p class="empty-state">没有匹配的日记。试试其他关键词或情绪，或回到「记录」写下此刻。</p>';
 }
 
 function showEntry(id) {

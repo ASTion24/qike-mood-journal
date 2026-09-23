@@ -1,4 +1,4 @@
-"""Calendar navigation and local-date grouping for the notebook view."""
+"""Calendar navigation and local-date grouping in the journal workspace."""
 import json
 import os
 from datetime import datetime, timezone
@@ -30,6 +30,7 @@ with sync_playwright() as p:
         "localStorage.setItem('qike.demo.v1', 'false');"
     )
     page.goto(URL, wait_until="networkidle")
+    page.locator('.nav-item[data-view="journal"]').click()
     expect(page.locator("#calendarSummary")).to_contain_text("本月记录 2 天")
     expect(page.locator("#calendarNext")).to_be_disabled()
 
@@ -52,9 +53,12 @@ with sync_playwright() as p:
     expect(page.locator("#entryList .entry-item")).to_have_count(3)
 
     # Saving while looking at an older month returns to the new record.
+    page.locator('.nav-item[data-view="today"]').click()
     page.locator('[data-mood="轻快"]').click()
+    page.locator("#writingToggle").click()
     page.locator("#journalText").fill("刚刚写下的新日记")
     page.locator("#saveButton").click()
+    page.locator('#analysisResult [data-view="journal"]').click()
     expect(page.locator("#calendarTitle")).to_contain_text("九月")
     expect(page.locator("#entryList")).to_contain_text("刚刚写下的新日记")
     expect(page.locator("#calendarNext")).to_be_disabled()
@@ -63,6 +67,7 @@ with sync_playwright() as p:
     expect(page.locator("#calendarSummary")).to_contain_text("示例")
     expect(page.locator("#entryList")).not_to_contain_text("刚刚写下的新日记")
     page.locator("#startPersonalButton").click()
+    page.locator('.nav-item[data-view="journal"]').click()
     expect(page.locator("#entryList")).to_contain_text("刚刚写下的新日记")
     browser.close()
 

@@ -54,17 +54,23 @@ with sync_playwright() as playwright:
     page.goto(URL, wait_until="networkidle")
 
     # Samples are visible, explicitly labeled, and never written as personal data.
+    expect(page.locator("#checkinDetails")).to_be_hidden()
+    page.screenshot(path=str(ARTIFACTS / "desktop-home-v5.png"), full_page=True)
+    nav(page, "journal")
     expect(page.locator("#demoNotice")).to_be_visible()
     expect(page.locator("#entryList .entry-item")).to_have_count(3)
     assert saved_entries(page) == []
-    page.screenshot(path=str(ARTIFACTS / "desktop-home-v2.png"), full_page=True)
-    nav(page, "trends")
+    page.screenshot(path=str(ARTIFACTS / "desktop-journal-v5.png"), full_page=True)
+    page.locator("#viewHistoryButton").click()
     expect(page.locator("#historyList .entry-item")).to_have_count(5)
+    nav(page, "trends")
     page.screenshot(path=str(ARTIFACTS / "desktop-trends-v2.png"), full_page=True)
     nav(page, "today")
 
     # Draft recovery and the explicit confirmation boundary for inferred triggers.
     page.locator('[data-mood="疲惫"]').click()
+    expect(page.locator("#optionalWriting")).to_be_hidden()
+    page.locator("#writingToggle").click()
     page.locator("#journalText").fill("明天要汇报，昨晚也没睡好，心里一直有点紧。")
     page.locator('[data-trigger="工作/学业"]').click()
     page.reload(wait_until="networkidle")
@@ -83,6 +89,7 @@ with sync_playwright() as playwright:
     page.screenshot(path=str(ARTIFACTS / "desktop-saved-v2.png"), full_page=True)
 
     # A full archive, filtering, viewing, and editing preserve entry identity/date.
+    page.locator('#analysisResult [data-view="journal"]').click()
     page.locator("#viewHistoryButton").click()
     expect(page.locator("#historyList .entry-item")).to_have_count(1)
     page.locator("#historySearch").fill("没有这段文字")
@@ -99,6 +106,7 @@ with sync_playwright() as playwright:
     assert len(saved_entries(page)) == 1
     assert saved_entries(page)[0]["id"] == original_id
     assert saved_entries(page)[0]["createdAt"] == original_time
+    page.locator('#analysisResult [data-view="journal"]').click()
     expect(page.locator("#entryList .entry-body p")).to_contain_text("<script>")
     page.reload(wait_until="networkidle")
     assert len(saved_entries(page)) == 1
@@ -167,6 +175,7 @@ with sync_playwright() as playwright:
     expect(page.locator("#infoModalTitle")).to_have_text("备份没有被写入")
     assert len(saved_entries(page)) == 1
     page.locator(".info-modal .modal-close").click()
+    nav(page, "journal")
     page.locator("#viewHistoryButton").click()
     page.locator("#historyList [data-entry]").click()
     page.locator("#deleteEntryButton").click()
@@ -204,6 +213,7 @@ with sync_playwright() as playwright:
     blocked.add_init_script("Storage.prototype.setItem = () => { throw new DOMException('full','QuotaExceededError'); };")
     blocked.goto(URL, wait_until="networkidle")
     blocked.locator('[data-mood="平静"]').click()
+    blocked.locator("#writingToggle").click()
     blocked.locator("#journalText").fill("这段文字不能丢失")
     blocked.locator("#saveButton").click()
     expect(blocked.locator("#saveError")).to_be_visible()
@@ -218,11 +228,11 @@ with sync_playwright() as playwright:
         requests = []
         responsive.on("request", lambda req: requests.append(req.url))
         responsive.goto(URL, wait_until="networkidle")
-        for view in ["today", "trends", "care"]:
+        for view in ["today", "journal", "trends", "care"]:
             nav(responsive, view, width)
             assert_no_horizontal_overflow(responsive)
             if width == 390:
-                responsive.screenshot(path=str(ARTIFACTS / f"mobile-{view}-v2.png"), full_page=True)
+                responsive.screenshot(path=str(ARTIFACTS / f"mobile-{view}-v5.png"), full_page=True)
         assert all(request.startswith(URL) for request in requests), requests
         responsive.close()
     assert not ERRORS, ERRORS
